@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>远程服务器抓包方法</title>
+    <url>/2023/05/21/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="远程抓包方法"><a href="#远程抓包方法" class="headerlink" title="远程抓包方法"></a>远程抓包方法</h2><p>在实际环境中，可能会遇到部分目标机器存在性能差，存储空间小等情况，导致无法长时间在目标机抓流量并存储数据包</p>
+<p>此时我们可以尝试利用目标机工具，对其进行远程抓包，从而避免将数据包存储在目标机上</p>
+<h3 id="Tcpdump-ssh-wireshark"><a href="#Tcpdump-ssh-wireshark" class="headerlink" title="Tcpdump+ssh+wireshark"></a>Tcpdump+ssh+wireshark</h3><p><a href="https://blog.csdn.net/koalazoo/article/details/84958752">(50条消息) 用wireshark+tcpdump+ssh远程抓包并实时显示_tcpdump 抓包实时转发_转转耳朵的博客-CSDN博客</a></p>
+<p>利用ssh登录远程主机，然后命令tcpdump开启抓包，并将tcpdump抓到的结果输出到stdout，再传回本地PC机，而本地PC机上的wireshark以stdin为输入，两者以管道连接传输</p>
+<h4 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh root@some.host <span class="string">&#x27;tcpdump -i eth0 port not 22 -s 0 -l -w -&#x27;</span> | wireshark -k -i -</span><br></pre></td></tr></table></figure>
+
+<p>命令执行后会弹出wireshark界面，这时需要切回刚刚的命令行，因为需要输入密码以登录远程主机（已经配置免密另说），连接成功后即开始抓包，并在本地PC的wireshark上实时显示抓包结果。</p>
+<blockquote>
+<p>&#x3D;&#x3D;注意&#x3D;&#x3D;</p>
+<p>由于是通过ssh隧道和远程主机进行的链接，链接中的通讯也会被抓取，从而导致数据包大小不断成倍增长</p>
+<p>可尝试不抓ssh端口的数据包，或者只抓内网通讯网卡的数据包</p>
+</blockquote>
+<h4 id="参数解释"><a href="#参数解释" class="headerlink" title="参数解释"></a>参数解释</h4><p>tcpdump中 <code>-l</code> （这里是小写的字母L）是指line-buffer，即不使用缓存，直接输出，否则就会一段段的输出</p>
+<p><code>-w -</code>是指写文件，目标文件为标准输出。</p>
+<p>wireshark中 <code>-k</code> 是指马上开始捕获数据，<code>-i -</code> 是指从指定接口获取，源为标准输入。</p>
+<h4 id="截图"><a href="#截图" class="headerlink" title="截图"></a>截图</h4><p><img src="/images/image-20230520191907142.png" alt="image-20230520191907142"></p>
+<h3 id="Tcpdump-nc-wireshark"><a href="#Tcpdump-nc-wireshark" class="headerlink" title="Tcpdump+nc+wireshark"></a>Tcpdump+nc+wireshark</h3><p>如果某些机器上没有ssh（例如某些路由器只有Telnet，或者只有webshell），则可以使用nc进行数据传输</p>
+<blockquote>
+<p>&#x3D;&#x3D;注意&#x3D;&#x3D;</p>
+<p>同样，要避免抓取通讯端口的数据包</p>
+</blockquote>
+<p><img src="/images/image-20230520193304708.png" alt="image-20230520193304708"></p>
+<h4 id="命令-1"><a href="#命令-1" class="headerlink" title="命令"></a>命令</h4><p>目标机</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">tcpdump -i eth0 port not 2333 -s 0 -l -w - | nc 192.168.2.111 2333</span><br></pre></td></tr></table></figure>
+
+<p>操作机</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nc -lvp 2333 | wireshark -k -i -</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/image-20230520193735800.png" alt="image-20230520193735800"></p>
+<h3 id="Tcpdump-nc-nohup-wireshark"><a href="#Tcpdump-nc-nohup-wireshark" class="headerlink" title="Tcpdump+nc+nohup+wireshark"></a>Tcpdump+nc+nohup+wireshark</h3><p>直接挂在后台进行抓包，注意nohup会在管道符之前截断，需要用<code>sh -c</code> 将管道符包含起来</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">nohup</span> sh -c <span class="string">&#x27;tcpdump -i eth0 port not 2333 -s 0 -l -w - | nc 192.168.2.111 2333&#x27;</span> &amp;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/image-20230520194915007.png" alt="image-20230520194915007"></p>
+]]></content>
+      <categories>
+        <category>应急响应</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>关于</title>
+    <url>/about/index.html</url>
+    <content><![CDATA[<h3 id="这个站点"><a href="#这个站点" class="headerlink" title="这个站点"></a>这个站点</h3><p>白嫖怪专属，Github+加速乐</p>
+<h3 id="我"><a href="#我" class="headerlink" title="我"></a>我</h3><ul>
+<li>CTFer</li>
+<li>web菜狗</li>
+</ul>
+]]></content>
+  </entry>
+  <entry>
+    <title>tags</title>
+    <url>/tags/index.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title>friends</title>
+    <url>/friends/index.html</url>
+    <content><![CDATA[<div class="flink"><div class="flink-name">友情链接</div><div class="flink-desc">这些大佬请带带我</div> <div class="flink-list">
+          <div class="flink-list-item">
+            <a href="https://www.tianchenyi.com/" title="小琲的天尘翼" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://www.tianchenyi.com/picture/favicon.ico" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="小琲的天尘翼" />
+              </div>
+              <div class="flink-item-name">小琲的天尘翼</div> 
+              <div class="flink-item-desc" title="今日事,今日毕">今日事,今日毕</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://www.cnblogs.com/pumpkin9/" title="pumpkin9" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="pumpkin9" />
+              </div>
+              <div class="flink-item-name">pumpkin9</div> 
+              <div class="flink-item-desc" title="pwn师傅tql">pwn师傅tql</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://www.yukinoo.site" title="yukinoo" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="http://www.yukinoo.site/upload/2021/10/preview-2155a3b187874466a47de4fc088414c4.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="yukinoo" />
+              </div>
+              <div class="flink-item-name">yukinoo</div> 
+              <div class="flink-item-desc" title="摸鱼之王">摸鱼之王</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://whoamianony.top/" title="WHOAMI" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://whoamianony.top/favicon.ico" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="WHOAMI" />
+              </div>
+              <div class="flink-item-name">WHOAMI</div> 
+              <div class="flink-item-desc" title="WHOAMI师傅yyds">WHOAMI师傅yyds</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://w4nder.top/" title="w4nder" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://gitee.com/w4nder/imgs/raw/master/1571753777463409.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="w4nder" />
+              </div>
+              <div class="flink-item-name">w4nder</div> 
+              <div class="flink-item-desc" title="w4师傅ddw">w4师傅ddw</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://www.yuque.com/th31nk/" title="th31nk" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://cdn.nlark.com/yuque/0/2021/jpeg/anonymous/1611985574086-a7aee59f-1269-451e-8177-5877ef130116.jpeg?x-oss-process=image%2Fresize%2Cm_fill%2Cw_320%2Ch_320%2Fformat%2Cpng" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="th31nk" />
+              </div>
+              <div class="flink-item-name">th31nk</div> 
+              <div class="flink-item-desc" title="全栈的神">全栈的神</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://www.cnblogs.com/MisakaYuii-Z/" title="MisakaYu11" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="MisakaYu11" />
+              </div>
+              <div class="flink-item-name">MisakaYu11</div> 
+              <div class="flink-item-desc" title="MisakaYu11">MisakaYu11</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://oriole.fun/" title="oriole" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="oriole" />
+              </div>
+              <div class="flink-item-name">oriole</div> 
+              <div class="flink-item-desc" title="两只黄鹂鸣翠柳">两只黄鹂鸣翠柳</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://www.whrizyl819.xyz/" title="sp4c1ous" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://b3logfile.com/siyuan/1621238442570/assets/1024px-Vincent_van_Gogh_-_Almond_blossom_-_Google_Art_Project-20220305222307-ex7eayk.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="sp4c1ous" />
+              </div>
+              <div class="flink-item-name">sp4c1ous</div> 
+              <div class="flink-item-desc" title="sp4c1ous">sp4c1ous</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://www.andynoel.xyz" title="andynoel" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="http://www.andynoel.xyz/wp-content/uploads/2022/02/IMG_648220220206-180239.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="andynoel" />
+              </div>
+              <div class="flink-item-name">andynoel</div> 
+              <div class="flink-item-desc" title="andynoel">andynoel</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://mon0dy.top/" title="mon0dy" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="http://mon0dy.top/img/head.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="mon0dy" />
+              </div>
+              <div class="flink-item-name">mon0dy</div> 
+              <div class="flink-item-desc" title="mon0dy">mon0dy</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://bigpowercat.github.io/" title="大能猫" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="大能猫" />
+              </div>
+              <div class="flink-item-name">大能猫</div> 
+              <div class="flink-item-desc" title="大能猫_多能">大能猫_多能</div>
+            </a>
+          </div></div></div>
+]]></content>
+  </entry>
+  <entry>
+    <title>categories</title>
+    <url>/categories/index-1.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/lib/source/lib/canvas-nest/README.html</url>
+    <content><![CDATA[<h1 align="center"><a href="https://github.com/hustcc/canvas-nest.js">canvas-nest.js</a> for <a href="https://github.com/theme-next">NexT</a></h1>
+
+<h1 align="center">Installation</h1>
+
+<h2 align="center">Step 1 &rarr; Go to NexT dir</h2>
+
+<p>Change dir to <strong>NexT</strong> directory. There must be <code>layout</code>, <code>source</code>, <code>languages</code> and other directories:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> themes/next</span><br><span class="line">$ <span class="built_in">ls</span></span><br><span class="line">bower.json  _config.yml  docs  gulpfile.coffee  languages  layout  LICENSE.md  package.json  README.md  scripts  <span class="built_in">source</span>  <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<h2 align="center">Step 2 &rarr; Get module</h2>
+
+<p>Install module to <code>source/lib</code> directory:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/theme-next-canvas-nest <span class="built_in">source</span>/lib/canvas-nest</span><br></pre></td></tr></table></figure>
+
+<h2 align="center">Step 3 &rarr; Set it up</h2>
+
+<p>Enable module in <strong>NexT</strong> <code>_config.yml</code> file:</p>
+<figure class="highlight yml"><table><tr><td class="code"><pre><span class="line"><span class="attr">canvas_nest:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">onmobile:</span> <span class="literal">true</span> <span class="comment"># display on mobile or not</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&#x27;0,0,255&#x27;</span> <span class="comment"># RGB values, use &#x27;,&#x27; to separate</span></span><br><span class="line">  <span class="attr">opacity:</span> <span class="number">0.5</span> <span class="comment"># the opacity of line: 0~1</span></span><br><span class="line">  <span class="attr">zIndex:</span> <span class="number">-1</span> <span class="comment"># z-index property of the background</span></span><br><span class="line">  <span class="attr">count:</span> <span class="number">99</span> <span class="comment"># the number of lines</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>And, if you wants to use the CDN, then need to set:</strong></p>
+<figure class="highlight yml"><table><tr><td class="code"><pre><span class="line"><span class="attr">vendors:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">canvas_nest:</span> <span class="string">//fastly.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest.min.js</span></span><br><span class="line">  <span class="attr">canvas_nest_nomobile:</span> <span class="string">//fastly.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js</span></span><br></pre></td></tr></table></figure>
+
+<h1 align="center">Update</h1>
+
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> themes/next/source/lib/canvas-nest</span><br><span class="line">$ git pull</span><br></pre></td></tr></table></figure>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/lib/source/lib/canvas-nest/canvas-nest-nomobile.min.js</url>
+    <content><![CDATA[!function(){
+	var userAgentInfo = navigator.userAgent;
+    var Agents = ["iPad", "iPhone", "Android", 
+          "SymbianOS", "Windows Phone",
+           "iPod", "webOS", "BlackBerry", "IEMobile"];
+    for (var v = 0; v < Agents.length; v++) {
+      if (userAgentInfo.indexOf(Agents[v]) > 0) {
+        return;
+      }
+    }
+	function o(w,v,i){return w.getAttribute(v)||i}function j(i){return document.getElementsByTagName(i)}function l(){var i=j("script"),w=i.length,v=i[w-1];return{l:w,z:o(v,"zIndex",-1),o:o(v,"opacity",0.5),c:o(v,"color","0,0,0"),n:o(v,"count",99)}}function k(){r=u.width=window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth,n=u.height=window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight}function b(){e.clearRect(0,0,r,n);var w=[f].concat(t);var x,v,A,B,z,y;t.forEach(function(i){i.x+=i.xa,i.y+=i.ya,i.xa*=i.x>r||i.x<0?-1:1,i.ya*=i.y>n||i.y<0?-1:1,e.fillRect(i.x-0.5,i.y-0.5,1,1);for(v=0;v<w.length;v++){x=w[v];if(i!==x&&null!==x.x&&null!==x.y){B=i.x-x.x,z=i.y-x.y,y=B*B+z*z;y<x.max&&(x===f&&y>=x.max/2&&(i.x-=0.03*B,i.y-=0.03*z),A=(x.max-y)/x.max,e.beginPath(),e.lineWidth=A/2,e.strokeStyle="rgba("+s.c+","+(A+0.2)+")",e.moveTo(i.x,i.y),e.lineTo(x.x,x.y),e.stroke())}}w.splice(w.indexOf(i),1)}),m(b)}var u=document.createElement("canvas"),s=l(),c="c_n"+s.l,e=u.getContext("2d"),r,n,m=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(i){window.setTimeout(i,1000/45)},a=Math.random,f={x:null,y:null,max:20000};u.id=c;u.style.cssText="position:fixed;top:0;left:0;z-index:"+s.z+";opacity:"+s.o;j("body")[0].appendChild(u);k(),window.onresize=k;window.onmousemove=function(i){i=i||window.event,f.x=i.clientX,f.y=i.clientY},window.onmouseout=function(){f.x=null,f.y=null};for(var t=[],p=0;s.n>p;p++){var h=a()*r,g=a()*n,q=2*a()-1,d=2*a()-1;t.push({x:h,y:g,xa:q,ya:d,max:6000})}setTimeout(function(){b()},100)}();]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/lib/source/lib/canvas-nest/canvas-nest.min.js</url>
+    <content><![CDATA[!function(){function o(w,v,i){return w.getAttribute(v)||i}function j(i){return document.getElementsByTagName(i)}function l(){var i=j("script"),w=i.length,v=i[w-1];return{l:w,z:o(v,"zIndex",-1),o:o(v,"opacity",0.5),c:o(v,"color","0,0,0"),n:o(v,"count",99)}}function k(){r=u.width=window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth,n=u.height=window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight}function b(){e.clearRect(0,0,r,n);var w=[f].concat(t);var x,v,A,B,z,y;t.forEach(function(i){i.x+=i.xa,i.y+=i.ya,i.xa*=i.x>r||i.x<0?-1:1,i.ya*=i.y>n||i.y<0?-1:1,e.fillRect(i.x-0.5,i.y-0.5,1,1);for(v=0;v<w.length;v++){x=w[v];if(i!==x&&null!==x.x&&null!==x.y){B=i.x-x.x,z=i.y-x.y,y=B*B+z*z;y<x.max&&(x===f&&y>=x.max/2&&(i.x-=0.03*B,i.y-=0.03*z),A=(x.max-y)/x.max,e.beginPath(),e.lineWidth=A/2,e.strokeStyle="rgba("+s.c+","+(A+0.2)+")",e.moveTo(i.x,i.y),e.lineTo(x.x,x.y),e.stroke())}}w.splice(w.indexOf(i),1)}),m(b)}var u=document.createElement("canvas"),s=l(),c="c_n"+s.l,e=u.getContext("2d"),r,n,m=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(i){window.setTimeout(i,1000/45)},a=Math.random,f={x:null,y:null,max:20000};u.id=c;u.style.cssText="position:fixed;top:0;left:0;z-index:"+s.z+";opacity:"+s.o;j("body")[0].appendChild(u);k(),window.onresize=k;window.onmousemove=function(i){i=i||window.event,f.x=i.clientX,f.y=i.clientY},window.onmouseout=function(){f.x=null,f.y=null};for(var t=[],p=0;s.n>p;p++){var h=a()*r,g=a()*n,q=2*a()-1,d=2*a()-1;t.push({x:h,y:g,xa:q,ya:d,max:6000})}setTimeout(function(){b()},100)}();]]></content>
+  </entry>
+  <entry>
+    <title>categories</title>
+    <url>/categories/index.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+</search>
