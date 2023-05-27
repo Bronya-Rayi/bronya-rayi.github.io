@@ -42,6 +42,104 @@
       </categories>
   </entry>
   <entry>
+    <title>远程服务器抓包方法</title>
+    <url>/2023/05/27/Flask+Celery/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近在用自己之前写的那个pdscan的时候，感觉到略有不适，时不时会出现比较诡异的bug，同时也缺少一堆自己想要的功能，于是考虑花几天修一修bug，加一点功能</p>
+<p>当时写pdscan的时候没学过什么叫消息任务队列，也懒得搞，所以就自己用<code>@app.before_first_request</code>和多线程弄了个后台任务，现在来看有点简陋了</p>
+<p>打算这次加功能的时候，顺道把自己写的这东西换掉，别放在github上丢人了</p>
+<h2 id="什么是celery"><a href="#什么是celery" class="headerlink" title="什么是celery"></a>什么是celery</h2><p>Celery是一个基于python开发的分布式异步消息任务队列，通过它可以轻松的实现任务的异步处理</p>
+<p>Celery的架构由三部分组成，消息中间件（message broker），任务执行单元（worker）和任务执行结果存储（task result store）</p>
+<p>具体来说，就是当程序产生异步任务需求时，通过Celery将异步任务发送至broker暂存，同时worker从broker中领取属于自己的任务并进行处理和结果存储，从而避免时间过长的异步任务对主任务产生影响</p>
+<p>用于暂存任务队列的broker可以使RabbitMQ，也可以是redis</p>
+<p><img src="/.assets/SouthEast.png" alt="这里写图片描述"></p>
+<h3 id="安装和示例"><a href="#安装和示例" class="headerlink" title="安装和示例"></a>安装和示例</h3><p>Redis安装略</p>
+<p>安装Celery和Redis：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pip install celery redis</span><br></pre></td></tr></table></figure>
+
+<p>启动redis</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">redis-server</span><br></pre></td></tr></table></figure>
+
+
+
+<p>以下是一个例子</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># test.py</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> hashlib <span class="keyword">import</span> md5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 Celery 实例</span></span><br><span class="line">app = Celery(<span class="string">&#x27;testTask&#x27;</span>, broker=<span class="string">&#x27;redis://localhost:6379/0&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task1</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建task_id为名称的文件，内容为当前时间</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span> 执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">7</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span> 结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task2</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 在此处定义你的任务逻辑</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span> 执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">9</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span> 结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>启动Celery worker</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python3 -m celery -A test worker --loglevel=info</span><br></pre></td></tr></table></figure>
+
+<p>这将启动Celery worker，使其准备好接收和执行任务。</p>
+<p><img src="/.assets/image-20230522195950762.png" alt="image-20230522195950762"></p>
+<p>向broker添加任务，可以看到直接就返回了结果，没有等待sleep和输出</p>
+<p><img src="/.assets/image-20230522200726716.png" alt="image-20230522200726716"></p>
+<p>在看celery的页面</p>
+<p><img src="/.assets/image-20230522200822739.png" alt="image-20230522200822739"></p>
+<h3 id="状态"><a href="#状态" class="headerlink" title="状态"></a>状态</h3><p>Celery 可以跟踪任务当前的状态信息。状态信息包含成功任务的结果，或执行失败任务的异常信息。</p>
+<p>在任务的执行周期中，可能会有几种状态的变换，每次变换都会附加当前状态信息。当任务进入下一个状态时，上一个状态的信息会被移除，但可以进行推断任务的状态信息（例如，一个任务处于执行 <code>FAILED</code> 状态，则表示在某个时刻是处于 <code>STARTED</code> 状态的）。</p>
+<p>如果需要跟踪任务信息、状态或返回值，需要提供一个 Celery 存储的结果后端，便于检索。有几个内置的结果后端可以考虑使用：SQLAlchemy&#x2F;Django ORM、Memcached、RabbitMQ&#x2F;QPid(rpc) 和 Redis，也可以自定义后端。</p>
+<h4 id="内置状态"><a href="#内置状态" class="headerlink" title="内置状态"></a>内置状态</h4><ul>
+<li><p>PENDING</p>
+<ul>
+<li>任务正在等待执行或未知。任何未知的任务 ID 都默认处于挂起状态。</li>
+</ul>
+</li>
+<li><p>STARTED</p>
+<ul>
+<li>任务已经开始。默认情况下不会记录，需要启用，请参阅 <code>app.Task.track_started.</code>。</li>
+<li>meta-data：正在执行任务的职程（Worker） pid 和主机名。</li>
+</ul>
+</li>
+<li><p>SUCCESS</p>
+<ul>
+<li>任务执行成功。</li>
+<li>meta-data：任务结果返回值 propagates：Yes ready: Yes</li>
+</ul>
+</li>
+<li><p>FAILURE</p>
+<ul>
+<li>任务执行失败。</li>
+<li>meta-data：执行异常时的任务信息，其中 traceback 包含引发错误的堆栈信息。 propagates：Yes</li>
+</ul>
+</li>
+<li><p>RETRY</p>
+<ul>
+<li>任务处于重试状态。</li>
+<li>meta-data：结果信息包含导致重试的异常信息，traceback 包含引发异常时堆栈的回溯。 propagates：No</li>
+</ul>
+</li>
+<li><p>REVOKED</p>
+<ul>
+<li>任务被撤销。</li>
+<li>propagates：Yes</li>
+</ul>
+</li>
+</ul>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><p>还是用上面的那个源码，但是在创建celery实例时，要开启存储结果后端</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 创建 Celery 实例</span></span><br><span class="line">app = Celery(<span class="string">&#x27;tasks&#x27;</span>, broker=<span class="string">&#x27;redis://localhost:6379/0&#x27;</span>, backend=<span class="string">&#x27;redis://localhost:6379/1&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>使用delay()方法会返回任务对象，调用任务对象的<code>.state</code>属性即可看到当前任务的任务状态</p>
+<p><img src="/.assets/image-20230522202227723.png" alt="image-20230522202227723"></p>
+<h3 id="状态控制"><a href="#状态控制" class="headerlink" title="状态控制"></a>状态控制</h3><p>终止未开始的特定任务：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery.result <span class="keyword">import</span> AsyncResult</span><br><span class="line">AsyncResult(c.task_id).revoke()</span><br></pre></td></tr></table></figure>
+
+<p>终止已经开始的任务，但不会结束其启动的进程</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery.result <span class="keyword">import</span> AsyncResult</span><br><span class="line">AsyncResult(c.task_id).revoke(terminate=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task1</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建task_id为名称的文件，内容为当前时间</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    os.system(<span class="string">&quot;sleep 10&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>结束于:&#x27;</span>, datetime.now())</span><br></pre></td></tr></table></figure>
+
+<p>终止指令下达后，还是能看到sleep的进程</p>
+<h3 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h3><p><code>celery beat</code> 是一个调度程序；它定期启动任务，然后由集群中的可用节点执行任务。</p>
+<p>默认情况下会从配置中的 <code>beat_schedule</code> 项中获取条目(entries)，但是也可以使用自定义存储，例如将<strong>entries</strong>存储在SQL数据库中。</p>
+<p>应确保一次只运行一个调度程序来执行一个调度程序，否则最终将导致重复的任务。使用集中式方法意味着时间表不必同步，并且该服务可以在不使用锁的情况下运行。</p>
+<p>在pdscan中，需要使用定时任务来检查是否有新扫描任务下达，例如，每10秒检查一次数据库中是否存在waiting的任务</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> hashlib <span class="keyword">import</span> md5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 Celery 实例</span></span><br><span class="line">app = Celery(<span class="string">&#x27;tasks&#x27;</span>, broker=<span class="string">&#x27;redis://localhost:6379/0&#x27;</span>, backend=<span class="string">&#x27;redis://localhost:6379/1&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task1</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建task_id为名称的文件，内容为当前时间</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">7</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task2</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 在此处定义你的任务逻辑</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span>执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">9</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span>结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义定时任务</span></span><br><span class="line"><span class="meta">@app.on_after_configure.connect</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setup_periodic_tasks</span>(<span class="params">sender, **kwargs</span>):</span><br><span class="line">    <span class="comment"># 每隔 5 秒执行一次任务</span></span><br><span class="line">    sender.add_periodic_task(<span class="number">5.0</span>, my_task1.s(), name=<span class="string">&#x27;任务1&#x27;</span>)</span><br><span class="line">    <span class="comment"># 每隔 5 秒执行一次任务</span></span><br><span class="line">    sender.add_periodic_task(<span class="number">5.0</span>, my_task2.s(), name=<span class="string">&#x27;任务2&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动 Celery 定时任务</span></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    app.start()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>应急响应</category>
+      </categories>
+  </entry>
+  <entry>
     <title>关于</title>
     <url>/about/index.html</url>
     <content><![CDATA[<h3 id="这个站点"><a href="#这个站点" class="headerlink" title="这个站点"></a>这个站点</h3><p>白嫖怪专属，Github+加速乐</p>
