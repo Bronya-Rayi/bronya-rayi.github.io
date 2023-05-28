@@ -42,7 +42,7 @@
       </categories>
   </entry>
   <entry>
-    <title>远程服务器抓包方法</title>
+    <title>Flask+Celery</title>
     <url>/2023/05/27/Flask+Celery/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近在用自己之前写的那个pdscan的时候，感觉到略有不适，时不时会出现比较诡异的bug，同时也缺少一堆自己想要的功能，于是考虑花几天修一修bug，加一点功能</p>
 <p>当时写pdscan的时候没学过什么叫消息任务队列，也懒得搞，所以就自己用<code>@app.before_first_request</code>和多线程弄了个后台任务，现在来看有点简陋了</p>
@@ -136,7 +136,28 @@
 
 ]]></content>
       <categories>
-        <category>应急响应</category>
+        <category>编程</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>VMware-12代CPU卡顿解决办法</title>
+    <url>/2023/05/28/VMware-12%E4%BB%A3CPU%E5%8D%A1%E9%A1%BF%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/</url>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>自从换了新电脑，虚拟机就一直卡的不行，哪怕就用win7开个文件管理器也能卡个半年</p>
+<p>改了硬件配置，8核8G的win7照卡不误，侧通道缓解根本没开</p>
+<p>不只是Windows，kali、ubuntu啥的也卡，还以为买到了假电脑</p>
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><p>在百思不得其解之时，看到了雨苁大佬的博客：</p>
+<p><a href="https://www.ddosi.org/vmware17/">VMware workstation 16 &amp; 17 12代CPU卡顿解决办法 - 🔰雨苁ℒ🔰 (ddosi.org)</a></p>
+<blockquote>
+<p>最终的解决办法如下:</p>
+<p>关闭或挂起所有虚拟机,找到VMware安装目录,vmware.exe右键–属性–兼容性–勾选”以管理员身份运行此程序“[应用-确定]</p>
+<p><a href="https://www.ddosi.org/wp-content/uploads/2022/11/21133935.webp"><img src="/.assets/21133935.webp" alt="VMware workstation 16 &amp; 17 12代CPU卡顿解决办法"></a></p>
+<p><a href="https://www.ddosi.org/wp-content/uploads/2022/11/21134026.webp"><img src="/.assets/21134026.webp" alt="VMware workstation 16 &amp; 17 12代CPU卡顿解决办法"></a></p>
+<p>再次打开虚拟机就不会卡顿了.</p>
+</blockquote>
+<p>试了试，确实好使，瞬间丝滑了，大佬牛逼</p>
+]]></content>
+      <categories>
+        <category>折腾环境</category>
       </categories>
   </entry>
   <entry>
