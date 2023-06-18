@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Flask+Celery</title>
+    <url>/2023/05/27/Flask+Celery/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近在用自己之前写的那个pdscan的时候，感觉到略有不适，时不时会出现比较诡异的bug，同时也缺少一堆自己想要的功能，于是考虑花几天修一修bug，加一点功能</p>
+<p>当时写pdscan的时候没学过什么叫消息任务队列，也懒得搞，所以就自己用<code>@app.before_first_request</code>和多线程弄了个后台任务，现在来看有点简陋了</p>
+<p>打算这次加功能的时候，顺道把自己写的这东西换掉，别放在github上丢人了</p>
+<h2 id="什么是celery"><a href="#什么是celery" class="headerlink" title="什么是celery"></a>什么是celery</h2><p>Celery是一个基于python开发的分布式异步消息任务队列，通过它可以轻松的实现任务的异步处理</p>
+<p>Celery的架构由三部分组成，消息中间件（message broker），任务执行单元（worker）和任务执行结果存储（task result store）</p>
+<p>具体来说，就是当程序产生异步任务需求时，通过Celery将异步任务发送至broker暂存，同时worker从broker中领取属于自己的任务并进行处理和结果存储，从而避免时间过长的异步任务对主任务产生影响</p>
+<p>用于暂存任务队列的broker可以使RabbitMQ，也可以是redis</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/SouthEast.png" alt="这里写图片描述"></p>
+<h3 id="安装和示例"><a href="#安装和示例" class="headerlink" title="安装和示例"></a>安装和示例</h3><p>Redis安装略</p>
+<p>安装Celery和Redis：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">pip install celery redis</span><br></pre></td></tr></table></figure>
+
+<p>启动redis</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">redis-server</span><br></pre></td></tr></table></figure>
+
+
+
+<p>以下是一个例子</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># test.py</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> hashlib <span class="keyword">import</span> md5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 Celery 实例</span></span><br><span class="line">app = Celery(<span class="string">&#x27;testTask&#x27;</span>, broker=<span class="string">&#x27;redis://localhost:6379/0&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task1</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建task_id为名称的文件，内容为当前时间</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span> 执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">7</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span> 结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task2</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 在此处定义你的任务逻辑</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span> 执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">9</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span> 结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>启动Celery worker</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">python3 -m celery -A test worker --loglevel=info</span><br></pre></td></tr></table></figure>
+
+<p>这将启动Celery worker，使其准备好接收和执行任务。</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230522195950762.png" alt="image-20230522195950762"></p>
+<p>向broker添加任务，可以看到直接就返回了结果，没有等待sleep和输出</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230522200726716.png" alt="image-20230522200726716"></p>
+<p>在看celery的页面</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230522200822739.png" alt="image-20230522200822739"></p>
+<h3 id="状态"><a href="#状态" class="headerlink" title="状态"></a>状态</h3><p>Celery 可以跟踪任务当前的状态信息。状态信息包含成功任务的结果，或执行失败任务的异常信息。</p>
+<p>在任务的执行周期中，可能会有几种状态的变换，每次变换都会附加当前状态信息。当任务进入下一个状态时，上一个状态的信息会被移除，但可以进行推断任务的状态信息（例如，一个任务处于执行 <code>FAILED</code> 状态，则表示在某个时刻是处于 <code>STARTED</code> 状态的）。</p>
+<p>如果需要跟踪任务信息、状态或返回值，需要提供一个 Celery 存储的结果后端，便于检索。有几个内置的结果后端可以考虑使用：SQLAlchemy&#x2F;Django ORM、Memcached、RabbitMQ&#x2F;QPid(rpc) 和 Redis，也可以自定义后端。</p>
+<h4 id="内置状态"><a href="#内置状态" class="headerlink" title="内置状态"></a>内置状态</h4><ul>
+<li><p>PENDING</p>
+<ul>
+<li>任务正在等待执行或未知。任何未知的任务 ID 都默认处于挂起状态。</li>
+</ul>
+</li>
+<li><p>STARTED</p>
+<ul>
+<li>任务已经开始。默认情况下不会记录，需要启用，请参阅 <code>app.Task.track_started.</code>。</li>
+<li>meta-data：正在执行任务的职程（Worker） pid 和主机名。</li>
+</ul>
+</li>
+<li><p>SUCCESS</p>
+<ul>
+<li>任务执行成功。</li>
+<li>meta-data：任务结果返回值 propagates：Yes ready: Yes</li>
+</ul>
+</li>
+<li><p>FAILURE</p>
+<ul>
+<li>任务执行失败。</li>
+<li>meta-data：执行异常时的任务信息，其中 traceback 包含引发错误的堆栈信息。 propagates：Yes</li>
+</ul>
+</li>
+<li><p>RETRY</p>
+<ul>
+<li>任务处于重试状态。</li>
+<li>meta-data：结果信息包含导致重试的异常信息，traceback 包含引发异常时堆栈的回溯。 propagates：No</li>
+</ul>
+</li>
+<li><p>REVOKED</p>
+<ul>
+<li>任务被撤销。</li>
+<li>propagates：Yes</li>
+</ul>
+</li>
+</ul>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><p>还是用上面的那个源码，但是在创建celery实例时，要开启存储结果后端</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 创建 Celery 实例</span></span><br><span class="line">app = Celery(<span class="string">&#x27;tasks&#x27;</span>, broker=<span class="string">&#x27;redis://localhost:6379/0&#x27;</span>, backend=<span class="string">&#x27;redis://localhost:6379/1&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>使用delay()方法会返回任务对象，调用任务对象的<code>.state</code>属性即可看到当前任务的任务状态</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230522202227723.png" alt="image-20230522202227723"></p>
+<h3 id="状态控制"><a href="#状态控制" class="headerlink" title="状态控制"></a>状态控制</h3><p>终止未开始的特定任务：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery.result <span class="keyword">import</span> AsyncResult</span><br><span class="line">AsyncResult(c.task_id).revoke()</span><br></pre></td></tr></table></figure>
+
+<p>终止已经开始的任务，但不会结束其启动的进程</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery.result <span class="keyword">import</span> AsyncResult</span><br><span class="line">AsyncResult(c.task_id).revoke(terminate=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task1</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建task_id为名称的文件，内容为当前时间</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    os.system(<span class="string">&quot;sleep 10&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>结束于:&#x27;</span>, datetime.now())</span><br></pre></td></tr></table></figure>
+
+<p>终止指令下达后，还是能看到sleep的进程</p>
+<h3 id="定时任务"><a href="#定时任务" class="headerlink" title="定时任务"></a>定时任务</h3><p><code>celery beat</code> 是一个调度程序；它定期启动任务，然后由集群中的可用节点执行任务。</p>
+<p>默认情况下会从配置中的 <code>beat_schedule</code> 项中获取条目(entries)，但是也可以使用自定义存储，例如将<strong>entries</strong>存储在SQL数据库中。</p>
+<p>应确保一次只运行一个调度程序来执行一个调度程序，否则最终将导致重复的任务。使用集中式方法意味着时间表不必同步，并且该服务可以在不使用锁的情况下运行。</p>
+<p>在pdscan中，需要使用定时任务来检查是否有新扫描任务下达，例如，每10秒检查一次数据库中是否存在waiting的任务</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> celery <span class="keyword">import</span> Celery</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timedelta</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> hashlib <span class="keyword">import</span> md5</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 Celery 实例</span></span><br><span class="line">app = Celery(<span class="string">&#x27;tasks&#x27;</span>, broker=<span class="string">&#x27;redis://localhost:6379/0&#x27;</span>, backend=<span class="string">&#x27;redis://localhost:6379/1&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task1</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 创建task_id为名称的文件，内容为当前时间</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">7</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务1:<span class="subst">&#123;task_id&#125;</span>结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义任务</span></span><br><span class="line"><span class="meta">@app.task</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">my_task2</span>():</span><br><span class="line">    <span class="comment"># 生成任务md5</span></span><br><span class="line">    task_id = md5(<span class="built_in">str</span>(time.time()).encode(<span class="string">&#x27;utf-8&#x27;</span>)).hexdigest()</span><br><span class="line">    </span><br><span class="line">    <span class="comment"># 在此处定义你的任务逻辑</span></span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span>执行于:&#x27;</span>, datetime.now())</span><br><span class="line">    time.sleep(<span class="number">9</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&#x27;定时任务2:<span class="subst">&#123;task_id&#125;</span>结束于:&#x27;</span>, datetime.now())</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义定时任务</span></span><br><span class="line"><span class="meta">@app.on_after_configure.connect</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setup_periodic_tasks</span>(<span class="params">sender, **kwargs</span>):</span><br><span class="line">    <span class="comment"># 每隔 5 秒执行一次任务</span></span><br><span class="line">    sender.add_periodic_task(<span class="number">5.0</span>, my_task1.s(), name=<span class="string">&#x27;任务1&#x27;</span>)</span><br><span class="line">    <span class="comment"># 每隔 5 秒执行一次任务</span></span><br><span class="line">    sender.add_periodic_task(<span class="number">5.0</span>, my_task2.s(), name=<span class="string">&#x27;任务2&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动 Celery 定时任务</span></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    app.start()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>编程</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>VMware-12代CPU卡顿解决办法</title>
+    <url>/2023/05/28/VMware-12%E4%BB%A3CPU%E5%8D%A1%E9%A1%BF%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/</url>
+    <content><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>自从换了新电脑，虚拟机就一直卡的不行，哪怕就用win7开个文件管理器也能卡个半年</p>
+<p>改了硬件配置，8核8G的win7照卡不误，侧通道缓解根本没开</p>
+<p>不只是Windows，kali、ubuntu啥的也卡，还以为买到了假电脑</p>
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><p>在百思不得其解之时，看到了雨苁大佬的博客：</p>
+<p><a href="https://www.ddosi.org/vmware17/">VMware workstation 16 &amp; 17 12代CPU卡顿解决办法 - 🔰雨苁ℒ🔰 (ddosi.org)</a></p>
+<blockquote>
+<p>最终的解决办法如下:</p>
+<p>关闭或挂起所有虚拟机,找到VMware安装目录,vmware.exe右键–属性–兼容性–勾选”以管理员身份运行此程序“[应用-确定]</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/21133935.webp" alt="这里写图片描述"></p>
+<p><img src="http://pic.rayi.sdpcsec.cn/21134026.webp"></p>
+<p>再次打开虚拟机就不会卡顿了.</p>
+</blockquote>
+<p>试了试，确实好使，瞬间丝滑了，大佬牛逼</p>
+]]></content>
+      <categories>
+        <category>折腾环境</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>利用SSH隧道建立端口转发或Socks代理</title>
+    <url>/2023/06/18/%E5%88%A9%E7%94%A8SSH%E9%9A%A7%E9%81%93%E5%BB%BA%E7%AB%8B%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E6%88%96Socks%E4%BB%A3%E7%90%86/</url>
+    <content><![CDATA[<h2 id="利用SSH隧道建立端口转发或Socks代理"><a href="#利用SSH隧道建立端口转发或Socks代理" class="headerlink" title="利用SSH隧道建立端口转发或Socks代理"></a>利用SSH隧道建立端口转发或Socks代理</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>在工作过程中，我们通常需要一些工具来帮助我们建立代理隧道，达到隐藏IP地址，或者穿透防火墙的效果。好用的工具有很多，但最常见的应该还是ssh。</p>
+<p>ssh自带三种转发功能，分别为动态转发（Socks代理）、本地端口转发、远程端口转发</p>
+<h3 id="环境假设"><a href="#环境假设" class="headerlink" title="环境假设"></a>环境假设</h3><p>假设我们有三台主机：</p>
+<ul>
+<li>Client A：Windows Localhost</li>
+<li>Tunnel B：Linux ssh 192.168.1.2:22</li>
+<li>Tunnel C：Linux ssh 192.168.1.3:33</li>
+</ul>
+<p>以下所有示例都按照此环境进行说明，我们本地终端就是Client A</p>
+<h3 id="动态转发（socks代理）"><a href="#动态转发（socks代理）" class="headerlink" title="动态转发（socks代理）"></a>动态转发（socks代理）</h3><p>newbing:SSH的动态端口转发（也称为“SOCKS代理”）允许您通过SSH连接将本地计算机上的指定端口配置为SOCKS代理服务器。当您的应用程序连接到该端口时，SSH客户端会创建到远程服务器的加密隧道，并且所有流经该隧道的流量都将被动态转发到目标主机和端口。</p>
+<p>动态端口转发的命令格式为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -Nf -D [bind_address:]port user@remotehost -p 22</span><br></pre></td></tr></table></figure>
+<p>其中：</p>
+<ul>
+<li><code>-D [bind_address:]port</code>：指定要使用的本地IP地址（可选）和要侦听的端口号。</li>
+<li><code>-N</code>：告诉SSH客户端，这个连接不需要执行任何命令。仅仅做端口转发。</li>
+<li><code>-f</code>：告诉SSH客户端在后台运行。</li>
+</ul>
+<p><code>bind_address</code>是指定要使用的本地IP地址。它是可选的，如果未指定，通常默认为<code>localhost</code>，但实际默认应根据配置文件中GatewayPorts来。这意味着只有本地计算机上的应用程序才能连接到SOCKS代理服务器。</p>
+<p>如果您希望其他计算机也能连接到SOCKS代理服务器，您可以将<code>bind_address</code>设置为您计算机的公共IP地址或<code>0.0.0.0</code>（表示侦听所有网络接口）。</p>
+<p>很好理解，就是相当于把远程服务器当做socks服务器，进行代理，以下是一个示例</p>
+<p>我们将A与B之间建立动态转发</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh -D 1234 -N -f root@192.168.1.2 -p 22</span><br></pre></td></tr></table></figure>
+
+<p>此时，我们把浏览器挂上代理（socks5:&#x2F;&#x2F;127.0.0.1:1234），最终出网地址为192.168.1.2</p>
+<p>在本地终端中运行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># rayi @ a in ~ [10:47:35] C:255</span></span><br><span class="line">$ ssh -Nf -D localhost:1234 root@47.xxx -p 22</span><br><span class="line">The authenticity of host <span class="string">&#x27;[47.xxx]:22 ([47.xxx]:22)&#x27;</span> can<span class="string">&#x27;t be established.</span></span><br><span class="line"><span class="string">ECDSA key fingerprint is SHA256:xxx.</span></span><br><span class="line"><span class="string">Are you sure you want to continue connecting (yes/no/[fingerprint])? yes</span></span><br><span class="line"><span class="string">Warning: Permanently added &#x27;</span>[47.xxx]:22<span class="string">&#x27; (ECDSA) to the list of known hosts.</span></span><br><span class="line"><span class="string">root@47.xxx&#x27;</span>s password:</span><br><span class="line">Permission denied, please try again.</span><br><span class="line">root@47.xxx<span class="string">&#x27;s password:</span></span><br><span class="line"><span class="string">Permission denied, please try again.</span></span><br><span class="line"><span class="string">root@47.xxx&#x27;</span>s password:</span><br><span class="line"></span><br><span class="line"><span class="comment"># rayi @ a in ~ [10:48:14]</span></span><br><span class="line">$ curl cip.cc</span><br><span class="line">IP      : 59.xxx</span><br><span class="line"></span><br><span class="line"><span class="comment"># rayi @ a in ~ [10:48:17]</span></span><br><span class="line">$ proxychains curl cip.cc</span><br><span class="line">ProxyChains-3.1 (http://proxychains.sf.net)</span><br><span class="line">|DNS-request| cip.cc</span><br><span class="line">|S-chain|-&lt;&gt;-127.0.0.1:1234-&lt;&gt;&lt;&gt;-4.2.2.2:53-&lt;&gt;&lt;&gt;-OK</span><br><span class="line">|DNS-response| cip.cc is 124.70.129.64</span><br><span class="line">|S-chain|-&lt;&gt;-127.0.0.1:1234-&lt;&gt;&lt;&gt;-124.70.129.64:80-&lt;&gt;&lt;&gt;-OK</span><br><span class="line">IP      : 47.xxx</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="本地端口转发"><a href="#本地端口转发" class="headerlink" title="本地端口转发"></a>本地端口转发</h3><p>newbing:SSH的本地端口转发允许您通过SSH连接将本地计算机上的指定端口转发到远程服务器上的指定主机和端口。当您的应用程序连接到该端口时，SSH客户端会创建到远程服务器的加密隧道，并且所有流经该隧道的流量都将被转发到目标主机和端口。</p>
+<p>本地端口转发的命令格式为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -Nf -L [bind_address:]port:host:hostport user@remotehost</span><br></pre></td></tr></table></figure>
+<p>其中：</p>
+<ul>
+<li><code>-L [bind_address:]port:host:hostport</code>：指定要使用的本地IP地址（可选）、要侦听的端口号、目标主机和目标端口。</li>
+<li><code>-N</code>：告诉SSH客户端，这个连接不需要执行任何命令。仅仅做端口转发。</li>
+<li><code>-f</code>：告诉SSH客户端在后台运行。</li>
+</ul>
+<p>简单来说，若我们的命令为：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh -Nf -L [bind_address:]HostAPort:HostC:HostCPort user@HostB</span><br></pre></td></tr></table></figure>
+
+<p>那么，该命令就是将对[bind_address:]APort的访问，通过B，转发成对C:CPort的访问</p>
+<p>示例，将本地的1234端口与远程的2333端口绑定</p>
+<p>在本地终端中运行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># rayi @ a in ~ [11:02:44] C:1</span></span><br><span class="line">$ ssh -Nf -L 1234:47.xxx:23002 root@47.xxx -p 3389</span><br><span class="line">root@47.xxx<span class="string">&#x27;s password:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"># rayi @ a in ~ [11:03:28]</span></span><br><span class="line"><span class="string">$ curl 127.0.0.1:1234</span></span><br></pre></td></tr></table></figure>
+
+<p>远程服务器监听，可得到结果</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># root @ VM-4-2-ubuntu in ~ [11:03:37]</span></span><br><span class="line">$ nc -lvp 23002</span><br><span class="line">Listening on 0.0.0.0 23002</span><br><span class="line">Connection received on 47.xxx 46662</span><br><span class="line">GET / HTTP/1.1</span><br><span class="line">Host: 127.0.0.1:1234</span><br><span class="line">User-Agent: curl/7.68.0</span><br><span class="line">Accept: */*</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="远程端口转发"><a href="#远程端口转发" class="headerlink" title="远程端口转发"></a>远程端口转发</h3><p>newbing：SSH的远程端口转发允许您通过SSH连接将远程服务器上的指定端口转发到本地计算机上的指定主机和端口。当远程服务器上的应用程序连接到该端口时，SSH客户端会创建到本地计算机的加密隧道，并且所有流经该隧道的流量都将被转发到目标主机和端口。</p>
+<p>远程端口转发的命令格式为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -Nf -R [bind_address:]port:host:hostport  user@remotehost</span><br></pre></td></tr></table></figure>
+<p>其中：</p>
+<ul>
+<li><code>-R [bind_address:]port:host:hostport</code>：指定要使用的远程IP地址（可选）、要侦听的端口号、目标主机和目标端口。</li>
+<li><code>-N</code>：告诉SSH客户端，这个连接不需要执行任何命令。仅仅做端口转发。</li>
+<li><code>-f</code>：告诉SSH客户端在后台运行。</li>
+</ul>
+<p>这个就跟上面的相反，简单来说，若我们的命令为：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh -Nf -R [bind_address:]HostBPort:HostC:HostCPort user@HostB</span><br></pre></td></tr></table></figure>
+
+<p>那么，该命令就是将对[bind_address:]BPort的访问，通过A，转发成对C:CPort的访问</p>
+<p>示例，在本地终端执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># rayi @ a in ~ [11:10:17]</span></span><br><span class="line">$ ssh -Nf -R 1234:127.0.0.1:2333 root@47.xxx -p 3389</span><br><span class="line">root@47.xxx<span class="string">&#x27;s password:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"># rayi @ a in ~ [11:11:53]</span></span><br><span class="line"><span class="string">$ nc -lvp 2333</span></span><br><span class="line"><span class="string">Listening on 0.0.0.0 2333</span></span><br><span class="line"><span class="string">Connection received on localhost 13190</span></span><br><span class="line"><span class="string">GET / HTTP/1.1</span></span><br><span class="line"><span class="string">Host: 127.0.0.1:1234</span></span><br><span class="line"><span class="string">User-Agent: curl/7.81.0</span></span><br><span class="line"><span class="string">Accept: */*</span></span><br></pre></td></tr></table></figure>
+
+<p>远程服务器执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># root @ VM-4-2-ubuntu in ~ [11:05:28] C:130</span></span><br><span class="line">$ curl http://127.0.0.1:1234</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="双层-x2F-多层代理隧道"><a href="#双层-x2F-多层代理隧道" class="headerlink" title="双层&#x2F;多层代理隧道"></a>双层&#x2F;多层代理隧道</h3><p>利用ssh端口转发功能建立起双层代理隧道，即本机链接A，A转发给B，B访问真正的服务器</p>
+<p>您可以使用SSH的端口转发功能来建立双层代理隧道。利用ssh构建多级跳板，就是先用本地转发将远端机器的ssh端口与本地端口做映射，然后再通过本地端口继续与其他远端机器的ssh端口构建映射，直至最后一跳时采用任意动态端口转发（建立socks服务器）。 最后本地使用socks代理工具进行配置，就可以根据需要让应用按照之前构建的隧道进行通信。¹</p>
+<p>例如，如果您有两级跳板，系统为linux，实验环境为：</p>
+<ul>
+<li>Client A：Windows Localhost</li>
+<li>Tunnel B：Linux ssh 192.168.1.39:22</li>
+<li>Tunnel C：Linux ssh 192.168.1.42:55</li>
+</ul>
+<p>那么第一层转发为： A (localhost:12345)-&gt;B (192.168.1.39:22)-&gt;C (192.168.1.42:55)。¹</p>
+<p>您可以参考这个例子来设置您自己的双层代理隧道。</p>
+<p>根据您之前提到的例子，您可以按照以下步骤进行操作：</p>
+<ol>
+<li><p>在Client A上执行第一层转发命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -Nf -C -L 12345:192.168.1.42:55 rootB@192.168.1.39 -p 22</span><br></pre></td></tr></table></figure>
+<p>这一步是做了本地12345端口到远程C的55端口映射，A与B之间的通信是SSH加密通信。</p>
+</li>
+<li><p>在Client A上执行第二层转发命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ssh -Nf -C -D localhost:9833 rootC@localhost -p 12345</span><br></pre></td></tr></table></figure>
+<p>这一步只绑定本地端口（9833），虽然是与本地的12345通信，但实质是通过tunnel1与C建立了动态转发关系。此时C充当Socks代理服务器的角色。</p>
+</li>
+</ol>
+<p>希望这些信息对您有所帮助。</p>
+<p>这些命令中的参数分别表示以下含义：</p>
+<ul>
+<li><code>-N</code>：告诉SSH客户端，这个连接不需要执行任何命令。仅仅做端口转发。</li>
+<li><code>-f</code>：告诉SSH客户端在后台运行。</li>
+<li><code>-C</code>：启用压缩数据传输。</li>
+<li><code>-L</code>：指定本地端口转发。格式为<code>[bind_address:]port:host:hostport</code>，表示将本地的<code>port</code>端口与远程的<code>host:hostport</code>建立映射关系。</li>
+<li><code>-D [bind_address:]port</code>：指定动态应用程序级别的端口转发。格式为<code>[bind_address:]port</code>，表示在本地机器上分配了一个端口进行侦听，一旦该端口有了连接，转发出去的数据由发起的请求来决定交给远端机器的哪个端口。</li>
+</ul>
+<p>希望这些信息对您有所帮助。</p>
+<p>源: 与必应的对话， 2023&#x2F;6&#x2F;18<br>(1) 利用SSH隧道构建多级Tunnel - 知乎 - 知乎专栏. <a href="https://zhuanlan.zhihu.com/p/94624842">https://zhuanlan.zhihu.com/p/94624842</a>.<br>(2) 彻底搞懂SSH端口转发命令 - 知乎 - 知乎专栏. <a href="https://zhuanlan.zhihu.com/p/148825449">https://zhuanlan.zhihu.com/p/148825449</a>.<br>(3) 使用SSH协议搭建隧道（附搭建环境超详细） - CSDN博客. <a href="https://blog.csdn.net/qq_45300786/article/details/111025981">https://blog.csdn.net/qq_45300786/article/details/111025981</a>.</p>
+]]></content>
+      <categories>
+        <category>渗透测试</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>远程服务器抓包方法</title>
+    <url>/2023/05/21/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="远程抓包方法"><a href="#远程抓包方法" class="headerlink" title="远程抓包方法"></a>远程抓包方法</h2><p>在实际环境中，可能会遇到部分目标机器存在性能差，存储空间小等情况，导致无法长时间在目标机抓流量并存储数据包</p>
+<p>此时我们可以尝试利用目标机工具，对其进行远程抓包，从而避免将数据包存储在目标机上</p>
+<h3 id="Tcpdump-ssh-wireshark"><a href="#Tcpdump-ssh-wireshark" class="headerlink" title="Tcpdump+ssh+wireshark"></a>Tcpdump+ssh+wireshark</h3><p><a href="https://blog.csdn.net/koalazoo/article/details/84958752">(50条消息) 用wireshark+tcpdump+ssh远程抓包并实时显示_tcpdump 抓包实时转发_转转耳朵的博客-CSDN博客</a></p>
+<p>利用ssh登录远程主机，然后命令tcpdump开启抓包，并将tcpdump抓到的结果输出到stdout，再传回本地PC机，而本地PC机上的wireshark以stdin为输入，两者以管道连接传输</p>
+<h4 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ssh root@some.host <span class="string">&#x27;tcpdump -i eth0 port not 22 -s 0 -l -w -&#x27;</span> | wireshark -k -i -</span><br></pre></td></tr></table></figure>
+
+<p>命令执行后会弹出wireshark界面，这时需要切回刚刚的命令行，因为需要输入密码以登录远程主机（已经配置免密另说），连接成功后即开始抓包，并在本地PC的wireshark上实时显示抓包结果。</p>
+<blockquote>
+<p>&#x3D;&#x3D;注意&#x3D;&#x3D;</p>
+<p>由于是通过ssh隧道和远程主机进行的链接，链接中的通讯也会被抓取，从而导致数据包大小不断成倍增长</p>
+<p>可尝试不抓ssh端口的数据包，或者只抓内网通讯网卡的数据包</p>
+</blockquote>
+<h4 id="参数解释"><a href="#参数解释" class="headerlink" title="参数解释"></a>参数解释</h4><p>tcpdump中 <code>-l</code> （这里是小写的字母L）是指line-buffer，即不使用缓存，直接输出，否则就会一段段的输出</p>
+<p><code>-w -</code>是指写文件，目标文件为标准输出。</p>
+<p>wireshark中 <code>-k</code> 是指马上开始捕获数据，<code>-i -</code> 是指从指定接口获取，源为标准输入。</p>
+<h4 id="截图"><a href="#截图" class="headerlink" title="截图"></a>截图</h4><p><img src="http://pic.rayi.sdpcsec.cn/image-20230520191907142.png" alt="image-20230520191907142"></p>
+<h3 id="Tcpdump-nc-wireshark"><a href="#Tcpdump-nc-wireshark" class="headerlink" title="Tcpdump+nc+wireshark"></a>Tcpdump+nc+wireshark</h3><p>如果某些机器上没有ssh（例如某些路由器只有Telnet，或者只有webshell），则可以使用nc进行数据传输</p>
+<blockquote>
+<p>&#x3D;&#x3D;注意&#x3D;&#x3D;</p>
+<p>同样，要避免抓取通讯端口的数据包</p>
+</blockquote>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230520193304708.png" alt="image-20230520193304708"></p>
+<h4 id="命令-1"><a href="#命令-1" class="headerlink" title="命令"></a>命令</h4><p>目标机</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">tcpdump -i eth0 port not 2333 -s 0 -l -w - | nc 192.168.2.111 2333</span><br></pre></td></tr></table></figure>
+
+<p>操作机</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nc -lvp 2333 | wireshark -k -i -</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230520193735800.png" alt="image-20230520193735800"></p>
+<h3 id="Tcpdump-nc-nohup-wireshark"><a href="#Tcpdump-nc-nohup-wireshark" class="headerlink" title="Tcpdump+nc+nohup+wireshark"></a>Tcpdump+nc+nohup+wireshark</h3><p>直接挂在后台进行抓包，注意nohup会在管道符之前截断，需要用<code>sh -c</code> 将管道符包含起来</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">nohup</span> sh -c <span class="string">&#x27;tcpdump -i eth0 port not 2333 -s 0 -l -w - | nc 192.168.2.111 2333&#x27;</span> &amp;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230520194915007.png" alt="image-20230520194915007"></p>
+]]></content>
+      <categories>
+        <category>应急响应</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>关于</title>
+    <url>/about/index.html</url>
+    <content><![CDATA[<h3 id="这个站点"><a href="#这个站点" class="headerlink" title="这个站点"></a>这个站点</h3><p>白嫖怪专属，Github+加速乐</p>
+<h3 id="我"><a href="#我" class="headerlink" title="我"></a>我</h3><ul>
+<li>CTFer</li>
+<li>web菜狗</li>
+</ul>
+]]></content>
+  </entry>
+  <entry>
+    <title>categories</title>
+    <url>/categories/index-1.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title>friends</title>
+    <url>/friends/index.html</url>
+    <content><![CDATA[<div class="flink"><div class="flink-name">友情链接</div><div class="flink-desc">这些大佬请带带我</div> <div class="flink-list">
+          <div class="flink-list-item">
+            <a href="https://www.tianchenyi.com/" title="小琲的天尘翼" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://www.tianchenyi.com/picture/favicon.ico" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="小琲的天尘翼" />
+              </div>
+              <div class="flink-item-name">小琲的天尘翼</div> 
+              <div class="flink-item-desc" title="今日事,今日毕">今日事,今日毕</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://www.cnblogs.com/pumpkin9/" title="pumpkin9" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="pumpkin9" />
+              </div>
+              <div class="flink-item-name">pumpkin9</div> 
+              <div class="flink-item-desc" title="pwn师傅tql">pwn师傅tql</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://www.yukinoo.site" title="yukinoo" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="http://www.yukinoo.site/upload/2021/10/preview-2155a3b187874466a47de4fc088414c4.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="yukinoo" />
+              </div>
+              <div class="flink-item-name">yukinoo</div> 
+              <div class="flink-item-desc" title="摸鱼之王">摸鱼之王</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://whoamianony.top/" title="WHOAMI" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://whoamianony.top/favicon.ico" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="WHOAMI" />
+              </div>
+              <div class="flink-item-name">WHOAMI</div> 
+              <div class="flink-item-desc" title="WHOAMI师傅yyds">WHOAMI师傅yyds</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://w4nder.top/" title="w4nder" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://gitee.com/w4nder/imgs/raw/master/1571753777463409.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="w4nder" />
+              </div>
+              <div class="flink-item-name">w4nder</div> 
+              <div class="flink-item-desc" title="w4师傅ddw">w4师傅ddw</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://www.yuque.com/th31nk/" title="th31nk" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://cdn.nlark.com/yuque/0/2021/jpeg/anonymous/1611985574086-a7aee59f-1269-451e-8177-5877ef130116.jpeg?x-oss-process=image%2Fresize%2Cm_fill%2Cw_320%2Ch_320%2Fformat%2Cpng" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="th31nk" />
+              </div>
+              <div class="flink-item-name">th31nk</div> 
+              <div class="flink-item-desc" title="全栈的神">全栈的神</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://www.cnblogs.com/MisakaYuii-Z/" title="MisakaYu11" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="MisakaYu11" />
+              </div>
+              <div class="flink-item-name">MisakaYu11</div> 
+              <div class="flink-item-desc" title="MisakaYu11">MisakaYu11</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://oriole.fun/" title="oriole" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="oriole" />
+              </div>
+              <div class="flink-item-name">oriole</div> 
+              <div class="flink-item-desc" title="两只黄鹂鸣翠柳">两只黄鹂鸣翠柳</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://www.whrizyl819.xyz/" title="sp4c1ous" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://b3logfile.com/siyuan/1621238442570/assets/1024px-Vincent_van_Gogh_-_Almond_blossom_-_Google_Art_Project-20220305222307-ex7eayk.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="sp4c1ous" />
+              </div>
+              <div class="flink-item-name">sp4c1ous</div> 
+              <div class="flink-item-desc" title="sp4c1ous">sp4c1ous</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://www.andynoel.xyz" title="andynoel" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="http://www.andynoel.xyz/wp-content/uploads/2022/02/IMG_648220220206-180239.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="andynoel" />
+              </div>
+              <div class="flink-item-name">andynoel</div> 
+              <div class="flink-item-desc" title="andynoel">andynoel</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="http://mon0dy.top/" title="mon0dy" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="http://mon0dy.top/img/head.jpg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="mon0dy" />
+              </div>
+              <div class="flink-item-name">mon0dy</div> 
+              <div class="flink-item-desc" title="mon0dy">mon0dy</div>
+            </a>
+          </div>
+          <div class="flink-list-item">
+            <a href="https://bigpowercat.github.io/" title="大能猫" target="_blank">
+              <div class="flink-item-icon">
+                <img class="no-lightbox" src="https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg" onerror='this.onerror=null;this.src="/img/friend_404.gif"' alt="大能猫" />
+              </div>
+              <div class="flink-item-name">大能猫</div> 
+              <div class="flink-item-desc" title="大能猫_多能">大能猫_多能</div>
+            </a>
+          </div></div></div>
+]]></content>
+  </entry>
+  <entry>
+    <title>categories</title>
+    <url>/categories/index.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title>tags</title>
+    <url>/tags/index.html</url>
+    <content><![CDATA[]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/lib/source/lib/canvas-nest/README.html</url>
+    <content><![CDATA[<h1 align="center"><a href="https://github.com/hustcc/canvas-nest.js">canvas-nest.js</a> for <a href="https://github.com/theme-next">NexT</a></h1>
+
+<h1 align="center">Installation</h1>
+
+<h2 align="center">Step 1 &rarr; Go to NexT dir</h2>
+
+<p>Change dir to <strong>NexT</strong> directory. There must be <code>layout</code>, <code>source</code>, <code>languages</code> and other directories:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> themes/next</span><br><span class="line">$ <span class="built_in">ls</span></span><br><span class="line">bower.json  _config.yml  docs  gulpfile.coffee  languages  layout  LICENSE.md  package.json  README.md  scripts  <span class="built_in">source</span>  <span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+
+<h2 align="center">Step 2 &rarr; Get module</h2>
+
+<p>Install module to <code>source/lib</code> directory:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/theme-next/theme-next-canvas-nest <span class="built_in">source</span>/lib/canvas-nest</span><br></pre></td></tr></table></figure>
+
+<h2 align="center">Step 3 &rarr; Set it up</h2>
+
+<p>Enable module in <strong>NexT</strong> <code>_config.yml</code> file:</p>
+<figure class="highlight yml"><table><tr><td class="code"><pre><span class="line"><span class="attr">canvas_nest:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">onmobile:</span> <span class="literal">true</span> <span class="comment"># display on mobile or not</span></span><br><span class="line">  <span class="attr">color:</span> <span class="string">&#x27;0,0,255&#x27;</span> <span class="comment"># RGB values, use &#x27;,&#x27; to separate</span></span><br><span class="line">  <span class="attr">opacity:</span> <span class="number">0.5</span> <span class="comment"># the opacity of line: 0~1</span></span><br><span class="line">  <span class="attr">zIndex:</span> <span class="number">-1</span> <span class="comment"># z-index property of the background</span></span><br><span class="line">  <span class="attr">count:</span> <span class="number">99</span> <span class="comment"># the number of lines</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>And, if you wants to use the CDN, then need to set:</strong></p>
+<figure class="highlight yml"><table><tr><td class="code"><pre><span class="line"><span class="attr">vendors:</span></span><br><span class="line">  <span class="string">...</span></span><br><span class="line">  <span class="attr">canvas_nest:</span> <span class="string">//fastly.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest.min.js</span></span><br><span class="line">  <span class="attr">canvas_nest_nomobile:</span> <span class="string">//fastly.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest-nomobile.min.js</span></span><br></pre></td></tr></table></figure>
+
+<h1 align="center">Update</h1>
+
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> themes/next/source/lib/canvas-nest</span><br><span class="line">$ git pull</span><br></pre></td></tr></table></figure>
+]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/lib/source/lib/canvas-nest/canvas-nest-nomobile.min.js</url>
+    <content><![CDATA[!function(){
+	var userAgentInfo = navigator.userAgent;
+    var Agents = ["iPad", "iPhone", "Android", 
+          "SymbianOS", "Windows Phone",
+           "iPod", "webOS", "BlackBerry", "IEMobile"];
+    for (var v = 0; v < Agents.length; v++) {
+      if (userAgentInfo.indexOf(Agents[v]) > 0) {
+        return;
+      }
+    }
+	function o(w,v,i){return w.getAttribute(v)||i}function j(i){return document.getElementsByTagName(i)}function l(){var i=j("script"),w=i.length,v=i[w-1];return{l:w,z:o(v,"zIndex",-1),o:o(v,"opacity",0.5),c:o(v,"color","0,0,0"),n:o(v,"count",99)}}function k(){r=u.width=window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth,n=u.height=window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight}function b(){e.clearRect(0,0,r,n);var w=[f].concat(t);var x,v,A,B,z,y;t.forEach(function(i){i.x+=i.xa,i.y+=i.ya,i.xa*=i.x>r||i.x<0?-1:1,i.ya*=i.y>n||i.y<0?-1:1,e.fillRect(i.x-0.5,i.y-0.5,1,1);for(v=0;v<w.length;v++){x=w[v];if(i!==x&&null!==x.x&&null!==x.y){B=i.x-x.x,z=i.y-x.y,y=B*B+z*z;y<x.max&&(x===f&&y>=x.max/2&&(i.x-=0.03*B,i.y-=0.03*z),A=(x.max-y)/x.max,e.beginPath(),e.lineWidth=A/2,e.strokeStyle="rgba("+s.c+","+(A+0.2)+")",e.moveTo(i.x,i.y),e.lineTo(x.x,x.y),e.stroke())}}w.splice(w.indexOf(i),1)}),m(b)}var u=document.createElement("canvas"),s=l(),c="c_n"+s.l,e=u.getContext("2d"),r,n,m=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(i){window.setTimeout(i,1000/45)},a=Math.random,f={x:null,y:null,max:20000};u.id=c;u.style.cssText="position:fixed;top:0;left:0;z-index:"+s.z+";opacity:"+s.o;j("body")[0].appendChild(u);k(),window.onresize=k;window.onmousemove=function(i){i=i||window.event,f.x=i.clientX,f.y=i.clientY},window.onmouseout=function(){f.x=null,f.y=null};for(var t=[],p=0;s.n>p;p++){var h=a()*r,g=a()*n,q=2*a()-1,d=2*a()-1;t.push({x:h,y:g,xa:q,ya:d,max:6000})}setTimeout(function(){b()},100)}();]]></content>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/lib/source/lib/canvas-nest/canvas-nest.min.js</url>
+    <content><![CDATA[!function(){function o(w,v,i){return w.getAttribute(v)||i}function j(i){return document.getElementsByTagName(i)}function l(){var i=j("script"),w=i.length,v=i[w-1];return{l:w,z:o(v,"zIndex",-1),o:o(v,"opacity",0.5),c:o(v,"color","0,0,0"),n:o(v,"count",99)}}function k(){r=u.width=window.innerWidth||document.documentElement.clientWidth||document.body.clientWidth,n=u.height=window.innerHeight||document.documentElement.clientHeight||document.body.clientHeight}function b(){e.clearRect(0,0,r,n);var w=[f].concat(t);var x,v,A,B,z,y;t.forEach(function(i){i.x+=i.xa,i.y+=i.ya,i.xa*=i.x>r||i.x<0?-1:1,i.ya*=i.y>n||i.y<0?-1:1,e.fillRect(i.x-0.5,i.y-0.5,1,1);for(v=0;v<w.length;v++){x=w[v];if(i!==x&&null!==x.x&&null!==x.y){B=i.x-x.x,z=i.y-x.y,y=B*B+z*z;y<x.max&&(x===f&&y>=x.max/2&&(i.x-=0.03*B,i.y-=0.03*z),A=(x.max-y)/x.max,e.beginPath(),e.lineWidth=A/2,e.strokeStyle="rgba("+s.c+","+(A+0.2)+")",e.moveTo(i.x,i.y),e.lineTo(x.x,x.y),e.stroke())}}w.splice(w.indexOf(i),1)}),m(b)}var u=document.createElement("canvas"),s=l(),c="c_n"+s.l,e=u.getContext("2d"),r,n,m=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.oRequestAnimationFrame||window.msRequestAnimationFrame||function(i){window.setTimeout(i,1000/45)},a=Math.random,f={x:null,y:null,max:20000};u.id=c;u.style.cssText="position:fixed;top:0;left:0;z-index:"+s.z+";opacity:"+s.o;j("body")[0].appendChild(u);k(),window.onresize=k;window.onmousemove=function(i){i=i||window.event,f.x=i.clientX,f.y=i.clientY},window.onmouseout=function(){f.x=null,f.y=null};for(var t=[],p=0;s.n>p;p++){var h=a()*r,g=a()*n,q=2*a()-1,d=2*a()-1;t.push({x:h,y:g,xa:q,ya:d,max:6000})}setTimeout(function(){b()},100)}();]]></content>
+  </entry>
+</search>
