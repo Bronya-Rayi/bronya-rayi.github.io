@@ -274,6 +274,74 @@
       </categories>
   </entry>
   <entry>
+    <title>在非目标机器上制作相同内核版本Profile文件</title>
+    <url>/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/</url>
+    <content><![CDATA[<h1 id="在非目标机器上制作相同内核版本Profile文件"><a href="#在非目标机器上制作相同内核版本Profile文件" class="headerlink" title="在非目标机器上制作相同内核版本Profile文件"></a>在非目标机器上制作相同内核版本Profile文件</h1><p>在使用volatility2进行内存取证的时候，需要制作相对应系统的profile文件，才能正常提取镜像中的信息。</p>
+<p>但正常取证流程下，可能会遇到无法在目标机器上安装制作profile所用依赖的情况</p>
+<p>目前来看，如果<strong>不想或无法在目标机器上安装或编译其他程序</strong>的话，制作系统符号表需要知道当前系统的<strong>发行版本及内核版本</strong>，然后搭建<strong>指定版本的虚拟机</strong>，提取其符号表信息</p>
+<h2 id="Volatility2"><a href="#Volatility2" class="headerlink" title="Volatility2"></a>Volatility2</h2><h3 id="CentOS"><a href="#CentOS" class="headerlink" title="CentOS"></a>CentOS</h3><h4 id="大致版本CentOS安装"><a href="#大致版本CentOS安装" class="headerlink" title="大致版本CentOS安装"></a>大致版本CentOS安装</h4><p>查看系统及内核版本</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@instance-xxxxx linux]<span class="comment"># uname -r</span></span><br><span class="line">3.10.0-957.12.1.el7.x86_64</span><br><span class="line">[root@instance-xxxxx kernels]<span class="comment"># cat /etc/redhat-release</span></span><br><span class="line">CentOS Linux release 7.6.1810 (Core)</span><br></pre></td></tr></table></figure>
+
+<p>下载指定版本的系统iso文件</p>
+<p><a href="https://mirrors.aliyun.com/centos-vault/7.6.1810/isos/x86_64/">centos-vault-7.6.1810-isos-x86_64安装包下载_开源镜像站-阿里云 (aliyun.com)</a></p>
+<p>下载最普遍的dvd版本，VMware自动化快速安装（mini?）</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230624235642610.png" alt="image-20230624235642610"></p>
+<p>此时的内核大版本应该是相同的，但是可能存在小版本差异</p>
+<h4 id="修整内核小版本差异"><a href="#修整内核小版本差异" class="headerlink" title="修整内核小版本差异"></a>修整内核小版本差异</h4><p>例如，某台Linux主机内核版本为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">3.10.0-957.12.1.el7.x86_64</span><br></pre></td></tr></table></figure>
+
+<p>可以发现，我们从镜像安装的内核是没有后面的小版本的，那小版本号差异在哪些地方呢？</p>
+<blockquote>
+<p>centos7中，3.10.0-957.12.1.el7.x86_64版本的内核和3.10.0-957.el7.x86_64版本的内核有何区别？</p>
+<p>内核版本3.10.0-957.12.1.el7.x86_64和3.10.0-957.el7.x86_64之间的主要区别在于它们的版本号。前者是第12个修补程序级别，而后者是第0个修补程序级别。修补程序级别是指内核的特定版本，其中包含了一些错误修复和安全更新。因此，3.10.0-957.12.1.el7.x86_64版本的内核比3.10.0-957.el7.x86_64版本的内核更稳定和更安全 ¹。</p>
+<p>希望这可以回答您的问题。如果您有任何其他问题，请告诉我。</p>
+<p>源: 与必应的对话， 2023&#x2F;6&#x2F;25<br>(1) centos 各版本发行时间和内核对应列表 - CSDN博客. <a href="https://blog.csdn.net/SHELLCODE_8BIT/article/details/122251707">https://blog.csdn.net/SHELLCODE_8BIT/article/details/122251707</a>.<br>(2) Red Hat Enterprise Linux のカーネルの最新リリースの確認方法. <a href="https://www.redhat.com/ja/blog/what-latest-kernel-release-my-version-red-hat-enterprise-linux">https://www.redhat.com/ja/blog/what-latest-kernel-release-my-version-red-hat-enterprise-linux</a>.<br>(3) centos7 内核 kernel-devel-3.10.0-957.el7.x86_64 - CSDN博客. <a href="https://blog.csdn.net/qq_54947566/article/details/122024506">https://blog.csdn.net/qq_54947566/article/details/122024506</a>.</p>
+</blockquote>
+<p>我们若想在虚拟机中制作profile，分析目标机器中提取的内存文件，就要做到大小版本完全一致</p>
+<p>于是，我们就得手动安装小版本内核</p>
+<p>先从centos官网下载对应版本的rpm包</p>
+<p><a href="https://buildlogs.centos.org/c7.1810.u.x86_64/kernel/20190429145505/3.10.0-957.12.1.el7.x86_64/">Index of &#x2F;c7.1810.u.x86_64&#x2F;kernel&#x2F;20190429145505&#x2F;3.10.0-957.12.1.el7.x86_64 (centos.org)</a></p>
+<p>需要下载的文件如下：</p>
+<ul>
+<li><code>kernel-3.10.0-957.12.1.el7.x86_64.rpm</code></li>
+</ul>
+<p>使用<code>yum install kernel-3.10.0-957.12.1.el7.x86_64.rpm</code>安装该个软件包，安装完成后，重启虚拟机，选择新版本内核启动，继续安装环境依赖</p>
+<p><img src="http://pic.rayi.sdpcsec.cn/image-20230625005329852.png" alt="image-20230625005329852"></p>
+<p>继续下载，并使用yum安装：</p>
+<ul>
+<li><code>kernel-headers-3.10.0-957.12.1.el7.x86_64.rpm</code></li>
+<li><code>kernel-devel-3.10.0-957.12.1.el7.x86_64.rpm</code></li>
+</ul>
+<p>若之前已经安装过相关软件包，则需使用<code>yum remove xxx</code>进行删除</p>
+<p>安装其他必要依赖</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">yum install gcc elfutils-libelf-devel make git libdwarf-tools python2-devel.x86_64 -y</span><br></pre></td></tr></table></figure>
+
+<p>至此，相同内核版本的虚拟机就制作完成了，从此虚拟机制作的profile文件，可以适用于其他相同内核版本的主机抓取的内存镜像</p>
+<h4 id="制作profile"><a href="#制作profile" class="headerlink" title="制作profile"></a>制作profile</h4><p>将<code>volatility2/tools/linux</code>文件夹复制进虚拟机，直接make，获取当前内核版本下的<code>module.dwarf</code>文件</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@localhost tmp]<span class="comment"># cd linux/</span></span><br><span class="line">[root@localhost linux]<span class="comment"># ls</span></span><br><span class="line">kcore  Makefile  Makefile.enterprise  module.c</span><br><span class="line">[root@localhost linux]<span class="comment"># make</span></span><br><span class="line">make -C //lib/modules/3.10.0-957.el7.x86_64/build CONFIG_DEBUG_INFO=y M=<span class="string">&quot;/tmp/linux&quot;</span> modules</span><br><span class="line">make[1]: Entering directory `/usr/src/kernels/3.10.0-957.el7.x86_64<span class="string">&#x27;</span></span><br><span class="line"><span class="string">  CC [M]  /tmp/linux/module.o</span></span><br><span class="line"><span class="string">  Building modules, stage 2.</span></span><br><span class="line"><span class="string">  MODPOST 1 modules</span></span><br><span class="line"><span class="string">  CC      /tmp/linux/module.mod.o</span></span><br><span class="line"><span class="string">  LD [M]  /tmp/linux/module.ko</span></span><br><span class="line"><span class="string">make[1]: Leaving directory `/usr/src/kernels/3.10.0-957.el7.x86_64&#x27;</span></span><br><span class="line">dwarfdump -di module.ko &gt; module.dwarf</span><br><span class="line">make -C //lib/modules/3.10.0-957.el7.x86_64/build M=<span class="string">&quot;/tmp/linux&quot;</span> clean</span><br><span class="line">make[1]: Entering directory `/usr/src/kernels/3.10.0-957.el7.x86_64<span class="string">&#x27;</span></span><br><span class="line"><span class="string">  CLEAN   /tmp/linux/.tmp_versions</span></span><br><span class="line"><span class="string">  CLEAN   /tmp/linux/Module.symvers</span></span><br><span class="line"><span class="string">make[1]: Leaving directory `/usr/src/kernels/3.10.0-957.el7.x86_64&#x27;</span></span><br><span class="line">[root@localhost linux]<span class="comment">#</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>随后，再从<code>/boot</code>目录获取<code>System.map</code>文件，它包含了所有与当前运行的内核相关的符号</p>
+<p>将<code>System.map</code>文件与<code>module.dwarf</code>文件放置同一文件夹下，并使用zip压缩</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[root@localhost linux]<span class="comment"># ls -la /boot</span></span><br><span class="line">total 128760</span><br><span class="line">dr-xr-xr-x.  5 root root     4096 Jun 24 08:56 .</span><br><span class="line">dr-xr-xr-x. 17 root root      224 Jun 24 08:55 ..</span><br><span class="line">-rw-r--r--.  1 root root   151918 Nov  8  2018 config-3.10.0-957.el7.x86_64</span><br><span class="line">drwx------.  3 root root       17 Nov  8  2018 efi</span><br><span class="line">drwxr-xr-x.  2 root root       27 Jun 24 08:50 grub</span><br><span class="line">drwx------.  5 root root       97 Jun 24 08:55 grub2</span><br><span class="line">-rw-------.  1 root root 74029448 Jun 24 08:54 initramfs-0-rescue-9d498ec355b64c509c250095df7ec6f5.img</span><br><span class="line">-rw-------.  1 root root 29277767 Jun 24 08:55 initramfs-3.10.0-957.el7.x86_64.img</span><br><span class="line">-rw-------.  1 root root 11226369 Jun 24 08:56 initramfs-3.10.0-957.el7.x86_64kdump.img</span><br><span class="line">-rw-r--r--.  1 root root   314036 Nov  8  2018 symvers-3.10.0-957.el7.x86_64.gz</span><br><span class="line">-rw-------.  1 root root  3543471 Nov  8  2018 System.map-3.10.0-957.el7.x86_64</span><br><span class="line">-rwxr-xr-x.  1 root root  6639904 Jun 24 08:54 vmlinuz-0-rescue-9d498ec355b64c509c250095df7ec6f5</span><br><span class="line">-rwxr-xr-x.  1 root root  6639904 Nov  8  2018 vmlinuz-3.10.0-957.el7.x86_64</span><br><span class="line">-rw-r--r--.  1 root root      166 Nov  8  2018 .vmlinuz-3.10.0-957.el7.x86_64.hmac</span><br><span class="line">[root@localhost linux]<span class="comment"># cp /boot/System.map-3.10.0-957.el7.x86_64 ./</span></span><br><span class="line">[root@localhost linux]<span class="comment"># ls</span></span><br><span class="line">kcore  Makefile  Makefile.enterprise  module.c  module.dwarf  System.map-3.10.0-957.el7.x86_64</span><br><span class="line">[root@localhost linux]<span class="comment"># zip Centos7.6.1810.zip ./module.dwarf System.map-3.10.0-957.el7.x86_64</span></span><br><span class="line">  adding: module.dwarf (deflated 89%)</span><br><span class="line">  adding: System.map-3.10.0-957.el7.x86_64 (deflated 79%)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>将zip文件取出，即可获得制作完成的自定义profile文件</p>
+<p>将其放置在<code>volatility2/volatility/plugins/overlays/linux</code>目录中，即可使profile文件生效</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ python2 D:\Tools\取证工具\volatility2\vol.py --info | findstr Centos</span><br><span class="line">Volatility Foundation Volatility Framework 2.6.1</span><br><span class="line">LinuxCentos7_6_1810x64                     - A Profile <span class="keyword">for</span> Linux Centos7.6.1810 x64</span><br></pre></td></tr></table></figure>
+
+<p>使用该profile文件分析内存</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ python2 D:\Tools\取证工具\volatility2\vol.py --profile=LinuxCentos7_6_1810x64 -f .\out2.lime linux_bash</span><br><span class="line">Volatility Foundation Volatility Framework 2.6.1</span><br><span class="line"></span><br><span class="line">Pid      Name                 Command Time                   Command</span><br><span class="line">-------- -------------------- ------------------------------ -------</span><br><span class="line">   17388 bash                 2023-06-24 15:56:19 UTC+0000   <span class="built_in">uname</span> -r</span><br><span class="line">   17388 bash                 2023-06-24 15:56:29 UTC+0000   @</span><br><span class="line">   17388 bash                 2023-06-24 15:56:29 UTC+0000   <span class="built_in">cat</span> /etc/redhat-release</span><br><span class="line">   17388 bash                 2023-06-24 15:57:13 UTC+0000   yum install kernel-headers kernel-devel gcc elfutils-libelf-devel make git libdwarf-tools python2-devel.x86_64 -y</span><br><span class="line">   17388 bash                 2023-06-24 15:57:17 UTC+0000   sudo su</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>其余版本profile待续</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>内存取证</category>
+      </categories>
+  </entry>
+  <entry>
     <title>关于</title>
     <url>/about/index.html</url>
     <content><![CDATA[<h3 id="这个站点"><a href="#这个站点" class="headerlink" title="这个站点"></a>这个站点</h3><p>白嫖怪专属，Github+加速乐</p>

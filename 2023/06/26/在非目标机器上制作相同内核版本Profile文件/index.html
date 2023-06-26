@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>在非目标机器上制作相同内核版本Profile文件 | Site-01</title><meta name="author" content="Rayi"><meta name="copyright" content="Rayi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在非目标机器上制作相同内核版本Profile文件在使用volatility2进行内存取证的时候，需要制作相对应系统的profile文件，才能正常提取镜像中的信息。 但正常取证流程下，可能会遇到无法在目标机器上安装制作profile所用依赖的情况 目前来看，如果不想或无法在目标机器上安装或编译其他程序的话，制作系统符号表需要知道当前系统的发行版本及内核版本，然后搭建指定版本的虚拟机，提取其符号表信息">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在非目标机器上制作相同内核版本Profile文件">
+<meta property="og:url" content="http://rayi.sdpcsec.cn/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/index.html">
+<meta property="og:site_name" content="Site-01">
+<meta property="og:description" content="在非目标机器上制作相同内核版本Profile文件在使用volatility2进行内存取证的时候，需要制作相对应系统的profile文件，才能正常提取镜像中的信息。 但正常取证流程下，可能会遇到无法在目标机器上安装制作profile所用依赖的情况 目前来看，如果不想或无法在目标机器上安装或编译其他程序的话，制作系统符号表需要知道当前系统的发行版本及内核版本，然后搭建指定版本的虚拟机，提取其符号表信息">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg">
+<meta property="article:published_time" content="2023-06-26T13:42:35.814Z">
+<meta property="article:modified_time" content="2023-06-26T14:01:24.987Z">
+<meta property="article:author" content="Rayi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg"><link rel="shortcut icon" href="/"><link rel="canonical" href="http://rayi.sdpcsec.cn/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/"><link rel="preconnect" href="//fastly.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?e6c07d91bcef88aeceb750c38c270d6a";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '在非目标机器上制作相同内核版本Profile文件',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-06-26 22:01:24'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.1.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/6f23fe17bbff904f5199f48a63e2907f.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/friends/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Site-01</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/friends/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">在非目标机器上制作相同内核版本Profile文件</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-06-26T13:42:35.814Z" title="发表于 2023-06-26 21:42:35">2023-06-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-06-26T14:01:24.987Z" title="更新于 2023-06-26 22:01:24">2023-06-26</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%86%85%E5%AD%98%E5%8F%96%E8%AF%81/">内存取证</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="在非目标机器上制作相同内核版本Profile文件"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="在非目标机器上制作相同内核版本Profile文件"><a href="#在非目标机器上制作相同内核版本Profile文件" class="headerlink" title="在非目标机器上制作相同内核版本Profile文件"></a>在非目标机器上制作相同内核版本Profile文件</h1><p>在使用volatility2进行内存取证的时候，需要制作相对应系统的profile文件，才能正常提取镜像中的信息。</p>
+<p>但正常取证流程下，可能会遇到无法在目标机器上安装制作profile所用依赖的情况</p>
+<p>目前来看，如果<strong>不想或无法在目标机器上安装或编译其他程序</strong>的话，制作系统符号表需要知道当前系统的<strong>发行版本及内核版本</strong>，然后搭建<strong>指定版本的虚拟机</strong>，提取其符号表信息</p>
+<h2 id="Volatility2"><a href="#Volatility2" class="headerlink" title="Volatility2"></a>Volatility2</h2><h3 id="CentOS"><a href="#CentOS" class="headerlink" title="CentOS"></a>CentOS</h3><h4 id="大致版本CentOS安装"><a href="#大致版本CentOS安装" class="headerlink" title="大致版本CentOS安装"></a>大致版本CentOS安装</h4><p>查看系统及内核版本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@instance-xxxxx linux]<span class="comment"># uname -r</span></span><br><span class="line">3.10.0-957.12.1.el7.x86_64</span><br><span class="line">[root@instance-xxxxx kernels]<span class="comment"># cat /etc/redhat-release</span></span><br><span class="line">CentOS Linux release 7.6.1810 (Core)</span><br></pre></td></tr></table></figure>
+
+<p>下载指定版本的系统iso文件</p>
+<p><a target="_blank" rel="noopener" href="https://mirrors.aliyun.com/centos-vault/7.6.1810/isos/x86_64/">centos-vault-7.6.1810-isos-x86_64安装包下载_开源镜像站-阿里云 (aliyun.com)</a></p>
+<p>下载最普遍的dvd版本，VMware自动化快速安装（mini?）</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20230624235642610.png" alt="image-20230624235642610"></p>
+<p>此时的内核大版本应该是相同的，但是可能存在小版本差异</p>
+<h4 id="修整内核小版本差异"><a href="#修整内核小版本差异" class="headerlink" title="修整内核小版本差异"></a>修整内核小版本差异</h4><p>例如，某台Linux主机内核版本为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">3.10.0-957.12.1.el7.x86_64</span><br></pre></td></tr></table></figure>
+
+<p>可以发现，我们从镜像安装的内核是没有后面的小版本的，那小版本号差异在哪些地方呢？</p>
+<blockquote>
+<p>centos7中，3.10.0-957.12.1.el7.x86_64版本的内核和3.10.0-957.el7.x86_64版本的内核有何区别？</p>
+<p>内核版本3.10.0-957.12.1.el7.x86_64和3.10.0-957.el7.x86_64之间的主要区别在于它们的版本号。前者是第12个修补程序级别，而后者是第0个修补程序级别。修补程序级别是指内核的特定版本，其中包含了一些错误修复和安全更新。因此，3.10.0-957.12.1.el7.x86_64版本的内核比3.10.0-957.el7.x86_64版本的内核更稳定和更安全 ¹。</p>
+<p>希望这可以回答您的问题。如果您有任何其他问题，请告诉我。</p>
+<p>源: 与必应的对话， 2023&#x2F;6&#x2F;25<br>(1) centos 各版本发行时间和内核对应列表 - CSDN博客. <a target="_blank" rel="noopener" href="https://blog.csdn.net/SHELLCODE_8BIT/article/details/122251707">https://blog.csdn.net/SHELLCODE_8BIT/article/details/122251707</a>.<br>(2) Red Hat Enterprise Linux のカーネルの最新リリースの確認方法. <a target="_blank" rel="noopener" href="https://www.redhat.com/ja/blog/what-latest-kernel-release-my-version-red-hat-enterprise-linux">https://www.redhat.com/ja/blog/what-latest-kernel-release-my-version-red-hat-enterprise-linux</a>.<br>(3) centos7 内核 kernel-devel-3.10.0-957.el7.x86_64 - CSDN博客. <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_54947566/article/details/122024506">https://blog.csdn.net/qq_54947566/article/details/122024506</a>.</p>
+</blockquote>
+<p>我们若想在虚拟机中制作profile，分析目标机器中提取的内存文件，就要做到大小版本完全一致</p>
+<p>于是，我们就得手动安装小版本内核</p>
+<p>先从centos官网下载对应版本的rpm包</p>
+<p><a target="_blank" rel="noopener" href="https://buildlogs.centos.org/c7.1810.u.x86_64/kernel/20190429145505/3.10.0-957.12.1.el7.x86_64/">Index of &#x2F;c7.1810.u.x86_64&#x2F;kernel&#x2F;20190429145505&#x2F;3.10.0-957.12.1.el7.x86_64 (centos.org)</a></p>
+<p>需要下载的文件如下：</p>
+<ul>
+<li><code>kernel-3.10.0-957.12.1.el7.x86_64.rpm</code></li>
+</ul>
+<p>使用<code>yum install kernel-3.10.0-957.12.1.el7.x86_64.rpm</code>安装该个软件包，安装完成后，重启虚拟机，选择新版本内核启动，继续安装环境依赖</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20230625005329852.png" alt="image-20230625005329852"></p>
+<p>继续下载，并使用yum安装：</p>
+<ul>
+<li><code>kernel-headers-3.10.0-957.12.1.el7.x86_64.rpm</code></li>
+<li><code>kernel-devel-3.10.0-957.12.1.el7.x86_64.rpm</code></li>
+</ul>
+<p>若之前已经安装过相关软件包，则需使用<code>yum remove xxx</code>进行删除</p>
+<p>安装其他必要依赖</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install gcc elfutils-libelf-devel make git libdwarf-tools python2-devel.x86_64 -y</span><br></pre></td></tr></table></figure>
+
+<p>至此，相同内核版本的虚拟机就制作完成了，从此虚拟机制作的profile文件，可以适用于其他相同内核版本的主机抓取的内存镜像</p>
+<h4 id="制作profile"><a href="#制作profile" class="headerlink" title="制作profile"></a>制作profile</h4><p>将<code>volatility2/tools/linux</code>文件夹复制进虚拟机，直接make，获取当前内核版本下的<code>module.dwarf</code>文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost tmp]<span class="comment"># cd linux/</span></span><br><span class="line">[root@localhost linux]<span class="comment"># ls</span></span><br><span class="line">kcore  Makefile  Makefile.enterprise  module.c</span><br><span class="line">[root@localhost linux]<span class="comment"># make</span></span><br><span class="line">make -C //lib/modules/3.10.0-957.el7.x86_64/build CONFIG_DEBUG_INFO=y M=<span class="string">&quot;/tmp/linux&quot;</span> modules</span><br><span class="line">make[1]: Entering directory `/usr/src/kernels/3.10.0-957.el7.x86_64<span class="string">&#x27;</span></span><br><span class="line"><span class="string">  CC [M]  /tmp/linux/module.o</span></span><br><span class="line"><span class="string">  Building modules, stage 2.</span></span><br><span class="line"><span class="string">  MODPOST 1 modules</span></span><br><span class="line"><span class="string">  CC      /tmp/linux/module.mod.o</span></span><br><span class="line"><span class="string">  LD [M]  /tmp/linux/module.ko</span></span><br><span class="line"><span class="string">make[1]: Leaving directory `/usr/src/kernels/3.10.0-957.el7.x86_64&#x27;</span></span><br><span class="line">dwarfdump -di module.ko &gt; module.dwarf</span><br><span class="line">make -C //lib/modules/3.10.0-957.el7.x86_64/build M=<span class="string">&quot;/tmp/linux&quot;</span> clean</span><br><span class="line">make[1]: Entering directory `/usr/src/kernels/3.10.0-957.el7.x86_64<span class="string">&#x27;</span></span><br><span class="line"><span class="string">  CLEAN   /tmp/linux/.tmp_versions</span></span><br><span class="line"><span class="string">  CLEAN   /tmp/linux/Module.symvers</span></span><br><span class="line"><span class="string">make[1]: Leaving directory `/usr/src/kernels/3.10.0-957.el7.x86_64&#x27;</span></span><br><span class="line">[root@localhost linux]<span class="comment">#</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>随后，再从<code>/boot</code>目录获取<code>System.map</code>文件，它包含了所有与当前运行的内核相关的符号</p>
+<p>将<code>System.map</code>文件与<code>module.dwarf</code>文件放置同一文件夹下，并使用zip压缩</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost linux]<span class="comment"># ls -la /boot</span></span><br><span class="line">total 128760</span><br><span class="line">dr-xr-xr-x.  5 root root     4096 Jun 24 08:56 .</span><br><span class="line">dr-xr-xr-x. 17 root root      224 Jun 24 08:55 ..</span><br><span class="line">-rw-r--r--.  1 root root   151918 Nov  8  2018 config-3.10.0-957.el7.x86_64</span><br><span class="line">drwx------.  3 root root       17 Nov  8  2018 efi</span><br><span class="line">drwxr-xr-x.  2 root root       27 Jun 24 08:50 grub</span><br><span class="line">drwx------.  5 root root       97 Jun 24 08:55 grub2</span><br><span class="line">-rw-------.  1 root root 74029448 Jun 24 08:54 initramfs-0-rescue-9d498ec355b64c509c250095df7ec6f5.img</span><br><span class="line">-rw-------.  1 root root 29277767 Jun 24 08:55 initramfs-3.10.0-957.el7.x86_64.img</span><br><span class="line">-rw-------.  1 root root 11226369 Jun 24 08:56 initramfs-3.10.0-957.el7.x86_64kdump.img</span><br><span class="line">-rw-r--r--.  1 root root   314036 Nov  8  2018 symvers-3.10.0-957.el7.x86_64.gz</span><br><span class="line">-rw-------.  1 root root  3543471 Nov  8  2018 System.map-3.10.0-957.el7.x86_64</span><br><span class="line">-rwxr-xr-x.  1 root root  6639904 Jun 24 08:54 vmlinuz-0-rescue-9d498ec355b64c509c250095df7ec6f5</span><br><span class="line">-rwxr-xr-x.  1 root root  6639904 Nov  8  2018 vmlinuz-3.10.0-957.el7.x86_64</span><br><span class="line">-rw-r--r--.  1 root root      166 Nov  8  2018 .vmlinuz-3.10.0-957.el7.x86_64.hmac</span><br><span class="line">[root@localhost linux]<span class="comment"># cp /boot/System.map-3.10.0-957.el7.x86_64 ./</span></span><br><span class="line">[root@localhost linux]<span class="comment"># ls</span></span><br><span class="line">kcore  Makefile  Makefile.enterprise  module.c  module.dwarf  System.map-3.10.0-957.el7.x86_64</span><br><span class="line">[root@localhost linux]<span class="comment"># zip Centos7.6.1810.zip ./module.dwarf System.map-3.10.0-957.el7.x86_64</span></span><br><span class="line">  adding: module.dwarf (deflated 89%)</span><br><span class="line">  adding: System.map-3.10.0-957.el7.x86_64 (deflated 79%)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>将zip文件取出，即可获得制作完成的自定义profile文件</p>
+<p>将其放置在<code>volatility2/volatility/plugins/overlays/linux</code>目录中，即可使profile文件生效</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ python2 D:\Tools\取证工具\volatility2\vol.py --info | findstr Centos</span><br><span class="line">Volatility Foundation Volatility Framework 2.6.1</span><br><span class="line">LinuxCentos7_6_1810x64                     - A Profile <span class="keyword">for</span> Linux Centos7.6.1810 x64</span><br></pre></td></tr></table></figure>
+
+<p>使用该profile文件分析内存</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ python2 D:\Tools\取证工具\volatility2\vol.py --profile=LinuxCentos7_6_1810x64 -f .\out2.lime linux_bash</span><br><span class="line">Volatility Foundation Volatility Framework 2.6.1</span><br><span class="line"></span><br><span class="line">Pid      Name                 Command Time                   Command</span><br><span class="line">-------- -------------------- ------------------------------ -------</span><br><span class="line">   17388 bash                 2023-06-24 15:56:19 UTC+0000   <span class="built_in">uname</span> -r</span><br><span class="line">   17388 bash                 2023-06-24 15:56:29 UTC+0000   @</span><br><span class="line">   17388 bash                 2023-06-24 15:56:29 UTC+0000   <span class="built_in">cat</span> /etc/redhat-release</span><br><span class="line">   17388 bash                 2023-06-24 15:57:13 UTC+0000   yum install kernel-headers kernel-devel gcc elfutils-libelf-devel make git libdwarf-tools python2-devel.x86_64 -y</span><br><span class="line">   17388 bash                 2023-06-24 15:57:17 UTC+0000   sudo su</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>其余版本profile待续</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Rayi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://rayi.sdpcsec.cn/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/">http://rayi.sdpcsec.cn/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://rayi.sdpcsec.cn" target="_blank">Site-01</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://fastly.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/06/18/%E5%88%A9%E7%94%A8SSH%E9%9A%A7%E9%81%93%E5%BB%BA%E7%AB%8B%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E6%88%96Socks%E4%BB%A3%E7%90%86/"><img class="next-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/c23e60bac678b974ffab7774c3ae2878.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">利用SSH隧道建立端口转发或Socks代理</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/6f23fe17bbff904f5199f48a63e2907f.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Rayi</div><div class="author-info__description">CTF菜狗，渗透垃圾。</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Bronya-Rayi" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:bronya.rayi@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6"><span class="toc-number">1.</span> <span class="toc-text">在非目标机器上制作相同内核版本Profile文件</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Volatility2"><span class="toc-number">1.1.</span> <span class="toc-text">Volatility2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CentOS"><span class="toc-number">1.1.1.</span> <span class="toc-text">CentOS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A4%A7%E8%87%B4%E7%89%88%E6%9C%ACCentOS%E5%AE%89%E8%A3%85"><span class="toc-number">1.1.1.1.</span> <span class="toc-text">大致版本CentOS安装</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BF%AE%E6%95%B4%E5%86%85%E6%A0%B8%E5%B0%8F%E7%89%88%E6%9C%AC%E5%B7%AE%E5%BC%82"><span class="toc-number">1.1.1.2.</span> <span class="toc-text">修整内核小版本差异</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%B6%E4%BD%9Cprofile"><span class="toc-number">1.1.1.3.</span> <span class="toc-text">制作profile</span></a></li></ol></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/" title="在非目标机器上制作相同内核版本Profile文件"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="在非目标机器上制作相同内核版本Profile文件"/></a><div class="content"><a class="title" href="/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/" title="在非目标机器上制作相同内核版本Profile文件">在非目标机器上制作相同内核版本Profile文件</a><time datetime="2023-06-26T13:42:35.814Z" title="发表于 2023-06-26 21:42:35">2023-06-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/06/18/%E5%88%A9%E7%94%A8SSH%E9%9A%A7%E9%81%93%E5%BB%BA%E7%AB%8B%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E6%88%96Socks%E4%BB%A3%E7%90%86/" title="利用SSH隧道建立端口转发或Socks代理"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/c23e60bac678b974ffab7774c3ae2878.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="利用SSH隧道建立端口转发或Socks代理"/></a><div class="content"><a class="title" href="/2023/06/18/%E5%88%A9%E7%94%A8SSH%E9%9A%A7%E9%81%93%E5%BB%BA%E7%AB%8B%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E6%88%96Socks%E4%BB%A3%E7%90%86/" title="利用SSH隧道建立端口转发或Socks代理">利用SSH隧道建立端口转发或Socks代理</a><time datetime="2023-06-18T03:24:04.941Z" title="发表于 2023-06-18 11:24:04">2023-06-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/28/VMware-12%E4%BB%A3CPU%E5%8D%A1%E9%A1%BF%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" title="VMware-12代CPU卡顿解决办法"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/d75df8e79b05bab46c36d971a3cd3bf1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="VMware-12代CPU卡顿解决办法"/></a><div class="content"><a class="title" href="/2023/05/28/VMware-12%E4%BB%A3CPU%E5%8D%A1%E9%A1%BF%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" title="VMware-12代CPU卡顿解决办法">VMware-12代CPU卡顿解决办法</a><time datetime="2023-05-28T08:51:56.410Z" title="发表于 2023-05-28 16:51:56">2023-05-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/27/Flask+Celery/" title="Flask+Celery"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/3ab9d954b25bf50ca79f41b970edb79c.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Flask+Celery"/></a><div class="content"><a class="title" href="/2023/05/27/Flask+Celery/" title="Flask+Celery">Flask+Celery</a><time datetime="2023-05-27T08:22:54.221Z" title="发表于 2023-05-27 16:22:54">2023-05-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/21/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/" title="远程服务器抓包方法"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/d75df8e79b05bab46c36d971a3cd3bf1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="远程服务器抓包方法"/></a><div class="content"><a class="title" href="/2023/05/21/%E6%B5%81%E9%87%8F%E5%88%86%E6%9E%90/" title="远程服务器抓包方法">远程服务器抓包方法</a><time datetime="2023-05-21T09:03:00.962Z" title="发表于 2023-05-21 17:03:00">2023-05-21</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2023 By Rayi</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">本地搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://fastly.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
