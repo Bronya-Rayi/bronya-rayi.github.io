@@ -1,0 +1,1363 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>volatility2与3使用笔记 | Site-01</title><meta name="author" content="Rayi"><meta name="copyright" content="Rayi"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="volatility2与3使用笔记需分析内容 系统进程信息 pstree psaux   系统网络信息 系统打开文件  提供标识LiME制作内存镜像文件, 可以利用banner中关键词搜索“Linux Version”找到相关的内核版本. 从而再进一步选择Volatility2的Profile或者Volatility3的Symbols. volatility3前言Linux模块列表   模块名称">
+<meta property="og:type" content="article">
+<meta property="og:title" content="volatility2与3使用笔记">
+<meta property="og:url" content="http://rayi.sdpcsec.cn/2023/07/01/volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="Site-01">
+<meta property="og:description" content="volatility2与3使用笔记需分析内容 系统进程信息 pstree psaux   系统网络信息 系统打开文件  提供标识LiME制作内存镜像文件, 可以利用banner中关键词搜索“Linux Version”找到相关的内核版本. 从而再进一步选择Volatility2的Profile或者Volatility3的Symbols. volatility3前言Linux模块列表   模块名称">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://pic.rayi.sdpcsec.cn/9adff99d4350f6355fa71854864ec381.jpg">
+<meta property="article:published_time" content="2023-07-01T13:48:51.791Z">
+<meta property="article:modified_time" content="2023-07-01T13:51:53.962Z">
+<meta property="article:author" content="Rayi">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://pic.rayi.sdpcsec.cn/9adff99d4350f6355fa71854864ec381.jpg"><link rel="shortcut icon" href="/"><link rel="canonical" href="http://rayi.sdpcsec.cn/2023/07/01/volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/"><link rel="preconnect" href="//fastly.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?e6c07d91bcef88aeceb750c38c270d6a";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: undefined,
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://fastly.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'volatility2与3使用笔记',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-07-01 21:51:53'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.1.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/6f23fe17bbff904f5199f48a63e2907f.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/friends/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('http://pic.rayi.sdpcsec.cn/9adff99d4350f6355fa71854864ec381.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Site-01</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/friends/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">volatility2与3使用笔记</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-07-01T13:48:51.791Z" title="发表于 2023-07-01 21:48:51">2023-07-01</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-07-01T13:51:53.962Z" title="更新于 2023-07-01 21:51:53">2023-07-01</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%86%85%E5%AD%98%E5%8F%96%E8%AF%81/">内存取证</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="volatility2与3使用笔记"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="volatility2与3使用笔记"><a href="#volatility2与3使用笔记" class="headerlink" title="volatility2与3使用笔记"></a>volatility2与3使用笔记</h1><h2 id="需分析内容"><a href="#需分析内容" class="headerlink" title="需分析内容"></a>需分析内容</h2><ul>
+<li>系统进程信息<ul>
+<li>pstree</li>
+<li>psaux</li>
+</ul>
+</li>
+<li>系统网络信息</li>
+<li>系统打开文件</li>
+</ul>
+<p>提供标识LiME制作内存镜像文件, 可以利用<strong>banner</strong>中关键词搜索“<strong>Linux Version</strong>”找到相关的内核版本. 从而再进一步选择<strong>Volatility2</strong>的<strong>Profile</strong>或者<strong>Volatility3</strong>的<strong>Symbols</strong>.</p>
+<h2 id="volatility3"><a href="#volatility3" class="headerlink" title="volatility3"></a>volatility3</h2><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><h3 id="Linux"><a href="#Linux" class="headerlink" title="Linux"></a>Linux</h3><h4 id="模块列表"><a href="#模块列表" class="headerlink" title="模块列表"></a>模块列表</h4><table>
+<thead>
+<tr>
+<th>模块名称</th>
+<th>简要功能介绍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>plugins.linux.bash</td>
+<td>提取和分析Bash历史记录</td>
+</tr>
+<tr>
+<td>plugins.linux.check_afinfo</td>
+<td>检查网络地址族信息</td>
+</tr>
+<tr>
+<td>plugins.linux.check_creds</td>
+<td>检查和提取进程凭证信息</td>
+</tr>
+<tr>
+<td>plugins.linux.check_idt</td>
+<td>检查和分析中断描述表 (IDT)</td>
+</tr>
+<tr>
+<td>plugins.linux.check_modules</td>
+<td>检查已加载的内核模块</td>
+</tr>
+<tr>
+<td>plugins.linux.check_syscall</td>
+<td>检查和分析系统调用表 (Syscall Table)</td>
+</tr>
+<tr>
+<td>plugins.linux.elfs</td>
+<td>检查和分析 ELF 格式的二进制文件</td>
+</tr>
+<tr>
+<td>plugins.linux.envars</td>
+<td>提取和分析环境变量</td>
+</tr>
+<tr>
+<td>plugins.linux.envvars</td>
+<td>提取和分析环境变量</td>
+</tr>
+<tr>
+<td>plugins.linux.iomem</td>
+<td>提取和分析物理内存映射</td>
+</tr>
+<tr>
+<td>plugins.linux.keyboard_notifiers</td>
+<td>检查和分析键盘事件通知</td>
+</tr>
+<tr>
+<td>plugins.linux.kmsg</td>
+<td>提取和分析内核消息缓冲区 (KMSG)</td>
+</tr>
+<tr>
+<td>plugins.linux.lsmod</td>
+<td>列出已加载的内核模块</td>
+</tr>
+<tr>
+<td>plugins.linux.lsof</td>
+<td>列出打开的文件和进程</td>
+</tr>
+<tr>
+<td>plugins.linux.malfind</td>
+<td>检测并分析可能的恶意进程</td>
+</tr>
+<tr>
+<td>plugins.linux.mountinfo</td>
+<td>提取和分析挂载信息</td>
+</tr>
+<tr>
+<td>plugins.linux.proc</td>
+<td>提取和分析进程信息</td>
+</tr>
+<tr>
+<td>plugins.linux.psaux</td>
+<td>列出详细的进程信息</td>
+</tr>
+<tr>
+<td>plugins.linux.pslist</td>
+<td>列出进程列表</td>
+</tr>
+<tr>
+<td>plugins.linux.psscan</td>
+<td>扫描物理内存以查找进程结构</td>
+</tr>
+<tr>
+<td>plugins.linux.pstree</td>
+<td>列出进程层次结构</td>
+</tr>
+<tr>
+<td>plugins.linux.sockstat</td>
+<td>提取和分析网络套接字信息</td>
+</tr>
+<tr>
+<td>plugins.linux.tty_check</td>
+<td>检查和分析tty设备</td>
+</tr>
+</tbody></table>
+<h3 id="MacOS"><a href="#MacOS" class="headerlink" title="MacOS"></a>MacOS</h3><h4 id="模块列表-1"><a href="#模块列表-1" class="headerlink" title="模块列表"></a>模块列表</h4><table>
+<thead>
+<tr>
+<th>模块名称</th>
+<th>简要功能介绍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>plugins.mac.bash</td>
+<td>提取和分析Bash历史记录</td>
+</tr>
+<tr>
+<td>plugins.mac.check_syscall</td>
+<td>检查和分析系统调用表 (Syscall Table)</td>
+</tr>
+<tr>
+<td>plugins.mac.check_sysctl</td>
+<td>检查和分析系统控制变量</td>
+</tr>
+<tr>
+<td>plugins.mac.check_trap_table</td>
+<td>检查和分析陷阱表 (Trap Table)</td>
+</tr>
+<tr>
+<td>plugins.mac.ifconfig</td>
+<td>获取和分析网络接口配置信息</td>
+</tr>
+<tr>
+<td>plugins.mac.kauth_listeners</td>
+<td>列出内核认证侦听器</td>
+</tr>
+<tr>
+<td>plugins.mac.kauth_scopes</td>
+<td>列出内核认证范围</td>
+</tr>
+<tr>
+<td>plugins.mac.kevents</td>
+<td>检查和分析内核事件 (Kevents)</td>
+</tr>
+<tr>
+<td>plugins.mac.list_files</td>
+<td>列出文件和目录</td>
+</tr>
+<tr>
+<td>plugins.mac.lsmod</td>
+<td>列出已加载的内核模块</td>
+</tr>
+<tr>
+<td>plugins.mac.lsof</td>
+<td>列出打开的文件和进程</td>
+</tr>
+<tr>
+<td>plugins.mac.malfind</td>
+<td>检测并分析可能的恶意进程</td>
+</tr>
+<tr>
+<td>plugins.mac.mount</td>
+<td>检查和分析挂载信息</td>
+</tr>
+<tr>
+<td>plugins.mac.netstat</td>
+<td>提取和分析网络连接信息</td>
+</tr>
+<tr>
+<td>plugins.mac.proc_maps</td>
+<td>提取和分析进程内存映射</td>
+</tr>
+<tr>
+<td>plugins.mac.psaux</td>
+<td>列出详细的进程信息</td>
+</tr>
+<tr>
+<td>plugins.mac.pslist</td>
+<td>列出进程列表</td>
+</tr>
+<tr>
+<td>plugins.mac.pstree</td>
+<td>列出进程层次结构</td>
+</tr>
+<tr>
+<td>plugins.mac.socket_filters</td>
+<td>检查和分析套接字过滤器</td>
+</tr>
+<tr>
+<td>plugins.mac.timers</td>
+<td>检查和分析内核计时器 (Timers)</td>
+</tr>
+<tr>
+<td>plugins.mac.trustedbsd</td>
+<td>检查和分析TrustedBSD模块</td>
+</tr>
+<tr>
+<td>plugins.mac.vfsevents</td>
+<td>检查和分析VFS事件</td>
+</tr>
+</tbody></table>
+<h3 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h3><h4 id="模块列表-2"><a href="#模块列表-2" class="headerlink" title="模块列表"></a>模块列表</h4><table>
+<thead>
+<tr>
+<th>模块名称</th>
+<th>简要功能介绍</th>
+<th>用法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>plugins.windows.registry</td>
+<td>用于操作和分析Windows注册表的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.bigpools</td>
+<td>分析和提取Windows大内存池中的对象</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.cachedump</td>
+<td>导出和分析Windows缓存的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.callbacks</td>
+<td>分析和提取Windows回调函数的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.cmdline</td>
+<td>提取和分析Windows进程的命令行参数</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.crashinfo</td>
+<td>提取和分析Windows崩溃转储信息</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.devicetree</td>
+<td>分析和提取Windows设备树的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.dlllist</td>
+<td>列出Windows进程加载的DLL模块</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” windows.dlllist ‑‑pid <PID></td>
+</tr>
+<tr>
+<td>plugins.windows.driverirp</td>
+<td>分析和提取Windows驱动程序的IRP调用</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.drivermodule</td>
+<td>分析和提取Windows驱动程序模块的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.driverscan</td>
+<td>扫描物理内存以查找Windows驱动程序结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.dumpfiles</td>
+<td>导出和分析Windows进程的内存转储</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” -o “&#x2F;path&#x2F;to&#x2F;dir” windows.dumpfiles ‑‑pid <PID></td>
+</tr>
+<tr>
+<td>plugins.windows.envars</td>
+<td>提取和分析Windows进程的环境变量</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.filescan</td>
+<td>在物理内存中扫描文件结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.getservicesids</td>
+<td>获取Windows服务的安全标识符</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.getsids</td>
+<td>获取Windows进程和线程的安全标识符</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.handles</td>
+<td>列出Windows进程的句柄和对象(PID、进程、偏移量、句柄值、类型、grantedaccess、名称)</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” windows.handles ‑‑pid <PID></td>
+</tr>
+<tr>
+<td>plugins.windows.hashdump</td>
+<td>导出和分析Windows密码哈希值</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.info</td>
+<td>提取和分析Windows系统信息</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” windows.info</td>
+</tr>
+<tr>
+<td>plugins.windows.joblinks</td>
+<td>检查和分析Windows作业链接</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.ldrmodules</td>
+<td>列出Windows进程加载的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.lsadump</td>
+<td>导出和分析Windows本地安全认证信息</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.malfind</td>
+<td>检测并分析可能的恶意进程</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.mbrscan</td>
+<td>扫描物理内存中的主引导记录</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.memmap</td>
+<td>列出物理内存映射</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” -o “&#x2F;path&#x2F;to&#x2F;dir” windows.memmap ‑‑dump ‑‑pid <PID></td>
+</tr>
+<tr>
+<td>plugins.windows.mftscan</td>
+<td>扫描物理内存中的Master File Table (MFT)</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.modscan</td>
+<td>扫描物理内存中的模块结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.modules</td>
+<td>列出Windows进程加载的模块</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.mutantscan</td>
+<td>扫描物理内存以查找Windows互斥体结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.netscan</td>
+<td>扫描物理内存以查找Windows网络连接结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.netstat</td>
+<td>提取和分析Windows网络连接信息</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.poolscanner</td>
+<td>扫描物理内存以查找Windows内存池结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.privileges</td>
+<td>列出Windows进程的特权</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.pslist</td>
+<td>列出Windows进程列表</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.psscan</td>
+<td>扫描物理内存以查找Windows进程结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.pstree</td>
+<td>列出Windows进程层次结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.sessions</td>
+<td>列出Windows登录会话</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.skeleton_key_check</td>
+<td>检查是否存在Skeleton Key攻击</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.ssdt</td>
+<td>分析和提取Windows系统服务描述符表 (SSDT)</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.strings</td>
+<td>提取和分析Windows进程中的字符串</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.svcscan</td>
+<td>扫描物理内存以查找Windows服务结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.symlinkscan</td>
+<td>扫描物理内存以查找Windows符号链接结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.vadinfo</td>
+<td>提取和分析Windows虚拟地址描述符 (VAD)</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.vadwalk</td>
+<td>遍历Windows虚拟地址描述符 (VAD)</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.verinfo</td>
+<td>提取和分析Windows可执行文件版本信息</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.volshell</td>
+<td>在Windows上运行Volatility命令</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.wintree</td>
+<td>列出Windows窗口层次结构</td>
+<td></td>
+</tr>
+<tr>
+<td>plugins.windows.yarascan</td>
+<td>使用YARA规则扫描Windows内存</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="注册表"><a href="#注册表" class="headerlink" title="注册表"></a>注册表</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> windows.registry.hivescan</span><br><span class="line"></span><br><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> windows.registry.hivelist</span><br><span class="line"></span><br><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> windows.registry.printkey</span><br><span class="line"></span><br><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> windows.registry.printkey ―key <span class="string">&quot;Software\Microsoft\Windows\CurrentVersion&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="转储文件"><a href="#转储文件" class="headerlink" title="转储文件"></a>转储文件</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> -o <span class="string">&quot;/path/to/dir&quot;</span> windows.dumpfiles</span><br><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> -o <span class="string">&quot;/path/to/dir&quot;</span> windows.dumpfiles ‑‑pid &lt;PID&gt;</span><br><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> -o <span class="string">&quot;/path/to/dir&quot;</span> windows.dumpfiles ‑‑virtaddr &lt;offset&gt;</span><br><span class="line">vol.py -f <span class="string">&quot;/path/to/file&quot;</span> -o <span class="string">&quot;/path/to/dir&quot;</span> windows.dumpfiles ‑‑physaddr &lt;offset&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="volatility2"><a href="#volatility2" class="headerlink" title="volatility2"></a>volatility2</h2><h3 id="Windows-1"><a href="#Windows-1" class="headerlink" title="Windows"></a>Windows</h3><blockquote>
+<p>参考链接：<a target="_blank" rel="noopener" href="https://blog.didctf.com/2022/10/02/volatility/">Volatility学习笔记 - DIDCTF-Blog</a></p>
+</blockquote>
+<h4 id="基础信息"><a href="#基础信息" class="headerlink" title="基础信息"></a>基础信息</h4><p>检测这个内存镜像是哪个操作系统的内存镜像以及各种内存信息</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME imageinfo</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> kdbgscan</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://oss.didctf.com/blog/QQ%E6%88%AA%E5%9B%BE20221002191551.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/QQ%25E6%2588%25AA%25E5%259B%25BE20221002191551.png" alt="img"></a></p>
+<p>首先的一个重要参数是<code>Suggested Profile</code> 也就是他的电脑版本号，只有这个版本号才能进行之后的步骤。</p>
+<p>例图中的<code>Suggested Profile</code>是有四个信息，但是大概率指向的版本是第一个。</p>
+<p>如果<code>Suggested Profile</code>后面带了一个<code>Instantiated with XXXXX</code>就是说他建议是哪个电脑版本号，所以用它建议的就行，当然这个情况也不是全都有的，有时候他不建议，你就选你自己的就行。</p>
+<p>下方的<code>Image date and time</code>是这个内存镜像的制作时间，默认是UTC+0的时间，这个参数的下一个<code>Image Local date and time</code>就是我们的UTC+8的时间(即本机的时区)。</p>
+<h4 id="进程分析"><a href="#进程分析" class="headerlink" title="进程分析"></a>进程分析</h4><p><strong>pslist</strong>命令不仅显示了所有正在运行的进程，而且给出了有价值的信息，比如PID、PPID、启动的时间。</p>
+<p><strong>pstree</strong>与pslist命令不同的地方在于还可以识别子进程以及父进程</p>
+<p><strong>psscan</strong>命令可以显示出被恶意软件比如rootkit为了躲避用户或杀毒软件而隐藏的进程</p>
+<p><strong>psxview</strong>查看进程列表(psx视图)</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 pslist</span><br></pre></td></tr></table></figure>
+
+<p>该命令为列出内存中的进程,包括进程PID、PPID以及启动时间，并可以清楚的看到父子进程的关系。</p>
+<p><a target="_blank" rel="noopener" href="https://oss.didctf.com/blog/20221002192541.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002192541.png" alt="img"></a></p>
+<p>如果遇到隐藏的进程，可以使用如下命令</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 psscan</span><br></pre></td></tr></table></figure>
+
+<p>该命令为列出内存中的所有进程，包括进程PID、PPID以及启动时间，并可以清楚的看到父子进程的关系。</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002193659.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002193659.png" alt="img"></a></p>
+<p>如果遇到名称伪装的进程，使用如下命令</p>
+<p>进程树</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 pstree</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002194020.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002194020.png" alt="img"></a></p>
+<p>有些恶意进程会伪装成同名进程，通过进程树，看他不归属于不正常进程</p>
+<p>例：很多恶意进程会伪装成svchost.exe，但svchost.exe的真正父进程是services.exe的。</p>
+<h4 id="动态链接库"><a href="#动态链接库" class="headerlink" title="动态链接库"></a>动态链接库</h4><p>就是所谓的dll文件</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 dlllist</span><br></pre></td></tr></table></figure>
+
+<p>该命令能看到每个进程（程序)运行所需要的所有动态链接库</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002194956.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002194956.png" alt="img"></a></p>
+<h4 id="网络连接"><a href="#网络连接" class="headerlink" title="网络连接"></a>网络连接</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 netscan</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; netscan</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; netstat</span><br><span class="line"></span><br><span class="line"><span class="comment"># XP/2003 SPECIFIC</span></span><br><span class="line"></span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; connscan</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; connections</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; sockscan</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; sockets</span><br></pre></td></tr></table></figure>
+
+<p>该命令可查看所有进程的连接协议、本地地址、连接地址、状态、监听端口以及pid。</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002195228.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002195228.png" alt="img"></a></p>
+<h4 id="内核驱动"><a href="#内核驱动" class="headerlink" title="内核驱动"></a>内核驱动</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 modules</span><br></pre></td></tr></table></figure>
+
+<p>该命令查看内核驱动,modscan、driverscan可查看一些隐藏的内核驱动。</p>
+<h4 id="提取进程程序"><a href="#提取进程程序" class="headerlink" title="提取进程程序"></a>提取进程程序</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 procdump <span class="literal">-D</span> 路径 <span class="literal">-p</span> 进程号PID</span><br></pre></td></tr></table></figure>
+
+<p>注意此命令会自动修改名称，修改后的名称就是图中的 Result的内容</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002195920.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002195920.png" alt="img"></a></p>
+<h4 id="内存文件"><a href="#内存文件" class="headerlink" title="内存文件"></a>内存文件</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 filescan</span><br></pre></td></tr></table></figure>
+
+<p>该命令能扫描内存中的文件</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002201224.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002201224.png" alt="img"></a></p>
+<h4 id="导出内存中缓存的文件"><a href="#导出内存中缓存的文件" class="headerlink" title="导出内存中缓存的文件"></a>导出内存中缓存的文件</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 dumpfiles <span class="literal">-Q</span> 内存中的位置 <span class="literal">-D</span> 导出路径</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; dumpfiles ‑‑dump<span class="literal">-dir</span>=<span class="string">&quot;/path/to/dir&quot;</span></span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; dumpfiles ‑‑dump<span class="literal">-dir</span>=<span class="string">&quot;/path/to/dir&quot;</span> <span class="literal">-Q</span> &lt;offset&gt;</span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; dumpfiles ‑‑dump<span class="literal">-dir</span>=<span class="string">&quot;/path/to/dir&quot;</span> <span class="literal">-p</span> &lt;PID&gt;</span><br></pre></td></tr></table></figure>
+
+<p>该命令能导出内存中缓存的文件</p>
+<p>-Q的内容就是filescan中第一行的Offset</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002201617.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002201617.png" alt="img"></a></p>
+<h4 id="注册表-1"><a href="#注册表-1" class="headerlink" title="注册表"></a>注册表</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 hivelist</span><br></pre></td></tr></table></figure>
+
+<p>该命令能列举在内存中的注册表</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002201403.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002201403.png" alt="img"></a></p>
+<h4 id="cmd命令情况"><a href="#cmd命令情况" class="headerlink" title="cmd命令情况"></a>cmd命令情况</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 cmdline</span><br><span class="line"></span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; cmdscan</span><br><span class="line"></span><br><span class="line">vol.py <span class="operator">-f</span> <span class="string">&quot;/path/to/file&quot;</span> ‑‑profile &lt;profile&gt; consoles</span><br></pre></td></tr></table></figure>
+
+<p>该命令能提取内存中保留的cmd命令使用情况</p>
+<h4 id="获取SAM表中的用户"><a href="#获取SAM表中的用户" class="headerlink" title="获取SAM表中的用户"></a>获取SAM表中的用户</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 printkey <span class="literal">-K</span> <span class="string">&quot;SAM\Domprintkeyains\Account\Users\Names&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>注意”SAM\Domprintkeyains\Account\Users\Names”这个路径是固定的，不用改变。</p>
+<h4 id="最后登录的用户"><a href="#最后登录的用户" class="headerlink" title="最后登录的用户"></a>最后登录的用户</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 printkey <span class="literal">-K</span> <span class="string">&quot;SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogin&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>该名称能查看最后登录系统的账户</p>
+<h4 id="密码hash"><a href="#密码hash" class="headerlink" title="密码hash"></a>密码hash</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 hashdump <span class="literal">-y</span> 注册表 system 的 virtual地址 <span class="literal">-s</span> SAM的virtual地址</span><br></pre></td></tr></table></figure>
+
+<p>该命令能从内存中获取密码hash</p>
+<p>virtual从hivelist注册表中获得。</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002203604.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002203604.png" alt="img"></a></p>
+<h4 id="Windows服务"><a href="#Windows服务" class="headerlink" title="Windows服务"></a>Windows服务</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">volatility_2.<span class="number">6</span>_win64_standalone.exe <span class="operator">-f</span> FILENAME <span class="literal">--profile</span>=版本号 svcscan </span><br></pre></td></tr></table></figure>
+
+<p>该命令能查看Windwos的服务</p>
+<p><a target="_blank" rel="noopener" href="https://didctf-blog-post.oss-cn-beijing.aliyuncs.com/post/volatility/20221002203006.png"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/20221002203006.png" alt="img"></a></p>
+<p>有些服务不一定有进程，所以PID为空。</p>
+<h4 id="MFT文件索引"><a href="#MFT文件索引" class="headerlink" title="MFT文件索引"></a>MFT文件索引</h4><p><a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS文件系统</a>是微软自Windows NT系统后引入的全新的文件系统。在<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS文件系统</a>里，磁盘上的所有东西都以文件的形式保存在<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E5%88%86%E5%8C%BA&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS分区</a>内，包括文件系统自身的结构和记录也是如此。NTFS中，卷中所有存放的数据均在一个叫$MFT的文件中，叫主文件表(Master File Table)，在MFT中保存了<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E5%88%86%E5%8C%BA&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS分区</a>上所有文件的索引，<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">操作系统</a>根据这个索引来检索问价。在使用mftparser插件时发现了flag.zip 和 flag.rar</p>
+<p><code>volatility -f mem.raw --profile=Win7SP1x86 mftparser &gt; mft.txt</code></p>
+<p>内容很多，随查找了一下flag关键字。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/006y8mN6ly1g7xxiekk7jj313w08w0sr.jpg"></p>
+<h4 id="所有编辑框中的内容"><a href="#所有编辑框中的内容" class="headerlink" title="所有编辑框中的内容"></a>所有编辑框中的内容</h4><p>这里有个更简单的办法，直接用<code>editbox</code>插件，即可看到系统中所有编辑控件中的编辑内容</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">$ volatility2 -f ./mem.raw --profile=Win7SP1x86 editbox</span><br><span class="line">Volatility Foundation Volatility Framework 2.6</span><br><span class="line">******************************</span><br><span class="line">Wnd Context       : 1\WinSta0\Default</span><br><span class="line">Process ID        : 3640</span><br><span class="line">ImageFileName     : iexplore.exe</span><br><span class="line">IsWow64           : No</span><br><span class="line">atom_class        : 6.0.7600.16385!Edit</span><br><span class="line">value-of WndExtra : 0x4a13b8</span><br><span class="line">nChars            : 0</span><br><span class="line">selStart          : 0</span><br><span class="line">selEnd            : 0</span><br><span class="line">isPwdControl      : False</span><br><span class="line">undoPos           : 0</span><br><span class="line">undoLen           : 0</span><br><span class="line">address-of undoBuf: 0x0</span><br><span class="line">undoBuf           :</span><br><span class="line">-------------------------</span><br><span class="line"></span><br><span class="line">******************************</span><br><span class="line">Wnd Context       : 1\WinSta0\Default</span><br><span class="line">Process ID        : 3640</span><br><span class="line">ImageFileName     : iexplore.exe</span><br><span class="line">IsWow64           : No</span><br><span class="line">atom_class        : 6.0.7600.16385!Edit</span><br><span class="line">value-of WndExtra : 0x49f3d0</span><br><span class="line">nChars            : 60</span><br><span class="line">selStart          : 0</span><br><span class="line">selEnd            : 0</span><br><span class="line">isPwdControl      : False</span><br><span class="line">undoPos           : 0</span><br><span class="line">undoLen           : 0</span><br><span class="line">address-of undoBuf: 0x0</span><br><span class="line">undoBuf           :</span><br><span class="line">-------------------------</span><br><span class="line">https://pan.baidu.com/share/init?surl=jAVwrRzIgW1QsLHidtzY_w</span><br><span class="line">******************************</span><br><span class="line">Wnd Context       : 1\WinSta0\Default</span><br><span class="line">Process ID        : 3552</span><br><span class="line">ImageFileName     : notepad.exe</span><br><span class="line">IsWow64           : No</span><br><span class="line">atom_class        : 6.0.7600.16385!Edit</span><br><span class="line">value-of WndExtra : 0x177ad0</span><br><span class="line">nChars            : 78</span><br><span class="line">selStart          : 0</span><br><span class="line">selEnd            : 0</span><br><span class="line">isPwdControl      : False</span><br><span class="line">undoPos           : 0</span><br><span class="line">undoLen           : 0</span><br><span class="line">address-of undoBuf: 0x0</span><br><span class="line">undoBuf           :</span><br><span class="line">-------------------------</span><br><span class="line"><span class="built_in">where</span> is <span class="built_in">link</span>?链接: https://pan.baidu.com/s/ 提取码: heem 复制这段内容后打开百度网盘手机App，操作更方便哦</span><br></pre></td></tr></table></figure>
+
+<p>两个提取码和提取链接都找到了</p>
+<h3 id="插件列表"><a href="#插件列表" class="headerlink" title="插件列表"></a>插件列表</h3><table>
+<thead>
+<tr>
+<th>插件名称</th>
+<th align="left">功能</th>
+<th>用法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>amcache</td>
+<td align="left">查看AmCache应用程序痕迹信息</td>
+<td></td>
+</tr>
+<tr>
+<td>apihooks</td>
+<td align="left">检测内核及进程的内存空间中的API hook</td>
+<td></td>
+</tr>
+<tr>
+<td>atoms</td>
+<td align="left">列出会话及窗口站atom表</td>
+<td></td>
+</tr>
+<tr>
+<td>atomscan</td>
+<td align="left">Atom表的池扫描(Pool scanner)</td>
+<td></td>
+</tr>
+<tr>
+<td>auditpol</td>
+<td align="left">列出注册表HKLM\SECURITY\Policy\PolAdtEv的审计策略信息</td>
+<td></td>
+</tr>
+<tr>
+<td>bigpools</td>
+<td align="left">使用BigPagePoolScanner转储大分页池(big page pools)</td>
+<td></td>
+</tr>
+<tr>
+<td>bioskbd</td>
+<td align="left">从实时模式内存中读取键盘缓冲数据(早期电脑可以读取出BIOS开机密码)</td>
+<td></td>
+</tr>
+<tr>
+<td>cachedump</td>
+<td align="left">获取内存中缓存的域帐号的密码哈希</td>
+<td></td>
+</tr>
+<tr>
+<td>callbacks</td>
+<td align="left">打印全系统通知例程</td>
+<td></td>
+</tr>
+<tr>
+<td>clipboard</td>
+<td align="left">提取Windows剪贴板中的内容</td>
+<td></td>
+</tr>
+<tr>
+<td>cmdline</td>
+<td align="left">显示进程命令行参数</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>cmdscan</strong></td>
+<td align="left">提取执行的命令行历史记录（扫描_COMMAND_HISTORY信息）</td>
+<td></td>
+</tr>
+<tr>
+<td>connections</td>
+<td align="left">打印系统打开的网络连接(仅支持Windows XP 和2003)</td>
+<td></td>
+</tr>
+<tr>
+<td>connscan</td>
+<td align="left">打印TCP连接信息</td>
+<td></td>
+</tr>
+<tr>
+<td>consoles</td>
+<td align="left">提取执行的命令行历史记录（扫描_CONSOLE_INFORMATION信息）</td>
+<td></td>
+</tr>
+<tr>
+<td>crashinfo</td>
+<td align="left">提取崩溃转储信息</td>
+<td></td>
+</tr>
+<tr>
+<td>deskscan</td>
+<td align="left">tagDESKTOP池扫描(Poolscaner)</td>
+<td></td>
+</tr>
+<tr>
+<td>devicetree</td>
+<td align="left">显示设备树信息</td>
+<td></td>
+</tr>
+<tr>
+<td>dlldump</td>
+<td align="left">从进程地址空间转储动态链接库</td>
+<td></td>
+</tr>
+<tr>
+<td>dlllist</td>
+<td align="left">打印每个进程加载的动态链接库列表</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 dlllist</td>
+</tr>
+<tr>
+<td>driverirp</td>
+<td align="left">IRP hook驱动检测</td>
+<td></td>
+</tr>
+<tr>
+<td>drivermodule</td>
+<td align="left">关联驱动对象至内核模块</td>
+<td></td>
+</tr>
+<tr>
+<td>driverscan</td>
+<td align="left">驱动对象池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td>dumpcerts</td>
+<td align="left">提取RAS私钥及SSL公钥</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>dumpfiles</strong></td>
+<td align="left">提取内存中映射或缓存的文件</td>
+<td></td>
+</tr>
+<tr>
+<td>dumpregistry</td>
+<td align="left">转储内存中注册表信息至磁盘</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 dumpregistry</td>
+</tr>
+<tr>
+<td><strong>editbox</strong></td>
+<td align="left">查看Edit编辑控件信息 (Listbox正在实验中)</td>
+<td></td>
+</tr>
+<tr>
+<td>envars</td>
+<td align="left">显示进程的环境变量</td>
+<td></td>
+</tr>
+<tr>
+<td>eventhooks</td>
+<td align="left">打印Windows事件hook详细信息</td>
+<td></td>
+</tr>
+<tr>
+<td>evtlogs</td>
+<td align="left">提取Windows事件日志（仅支持XP&#x2F;2003)</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>filescan</strong></td>
+<td align="left">提取文件对象（file objects）池信息</td>
+<td></td>
+</tr>
+<tr>
+<td>gahti</td>
+<td align="left">转储用户句柄（handle）类型信息</td>
+<td></td>
+</tr>
+<tr>
+<td>gditimers</td>
+<td align="left">打印已安装的GDI计时器(timers)及回调(callbacks)</td>
+<td></td>
+</tr>
+<tr>
+<td>gdt</td>
+<td align="left">显示全局描述符表(Global Descriptor Table)</td>
+<td></td>
+</tr>
+<tr>
+<td>getservicesids</td>
+<td align="left">获取注册表中的服务名称并返回SID信息</td>
+<td></td>
+</tr>
+<tr>
+<td>getsids</td>
+<td align="left">打印每个进程的SID信息</td>
+<td></td>
+</tr>
+<tr>
+<td>handles</td>
+<td align="left">打印每个进程打开的句柄的列表(Offset(V), PID, handle, access, type, details)</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” ‑‑profile <profile> handles -p <PID></td>
+</tr>
+<tr>
+<td>hashdump</td>
+<td align="left">转储内存中的Windows帐户密码哈希(LM&#x2F;NTLM)</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 hashdump</td>
+</tr>
+<tr>
+<td>hibinfo</td>
+<td align="left">转储休眠文件信息</td>
+<td></td>
+</tr>
+<tr>
+<td>hivedump</td>
+<td align="left">打印注册表配置单元信息</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>hivelist</strong></td>
+<td align="left">打印注册表配置单元列表</td>
+<td></td>
+</tr>
+<tr>
+<td>hivescan</td>
+<td align="left">注册表配置单元池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td>hpakextract</td>
+<td align="left">从HPAK文件（Fast Dump格式）提取物理内存数据</td>
+<td></td>
+</tr>
+<tr>
+<td>hpakinfo</td>
+<td align="left">查看HPAK文件属性及相关信息</td>
+<td></td>
+</tr>
+<tr>
+<td>idt</td>
+<td align="left">显示中断描述符表(Interrupt Descriptor Table)</td>
+<td></td>
+</tr>
+<tr>
+<td>iehistory</td>
+<td align="left">重建IE缓存及访问历史记录</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 iehistory</td>
+</tr>
+<tr>
+<td>imagecopy</td>
+<td align="left">将物理地址空间导出原生DD镜像文件</td>
+<td></td>
+</tr>
+<tr>
+<td>imageinfo</td>
+<td align="left">查看&#x2F;识别镜像信息</td>
+<td></td>
+</tr>
+<tr>
+<td>impscan</td>
+<td align="left">扫描对导入函数的调用</td>
+<td></td>
+</tr>
+<tr>
+<td>joblinks</td>
+<td align="left">打印进程任务链接信息</td>
+<td></td>
+</tr>
+<tr>
+<td>kdbgscan</td>
+<td align="left">搜索和转储潜在KDBG值</td>
+<td></td>
+</tr>
+<tr>
+<td>kpcrscan</td>
+<td align="left">搜索和转储潜在KPCR值</td>
+<td></td>
+</tr>
+<tr>
+<td>ldrmodules</td>
+<td align="left">检测未链接的动态链接DLL</td>
+<td></td>
+</tr>
+<tr>
+<td>lsadump</td>
+<td align="left">从注册表中提取LSA密钥信息（已解密）</td>
+<td></td>
+</tr>
+<tr>
+<td>machoinfo</td>
+<td align="left">转储Mach-O 文件格式信息</td>
+<td></td>
+</tr>
+<tr>
+<td>malfind</td>
+<td align="left">查找隐藏的和插入的代码</td>
+<td></td>
+</tr>
+<tr>
+<td>mbrparser</td>
+<td align="left">扫描并解析潜在的主引导记录(MBR)</td>
+<td></td>
+</tr>
+<tr>
+<td>memdump</td>
+<td align="left">转储进程的可寻址内存</td>
+<td></td>
+</tr>
+<tr>
+<td>memmap</td>
+<td align="left">打印内存映射</td>
+<td></td>
+</tr>
+<tr>
+<td>messagehooks</td>
+<td align="left">桌面和窗口消息钩子的线程列表</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>mftparser</strong></td>
+<td align="left">扫描并解析潜在的MFT条目</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 mftparser  –output-file&#x3D;mftverbose.txt -D mftoutput</td>
+</tr>
+<tr>
+<td>moddump</td>
+<td align="left">转储内核驱动程序到可执行文件的示例</td>
+<td></td>
+</tr>
+<tr>
+<td>modscan</td>
+<td align="left">内核模块池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td>modules</td>
+<td align="left">打印加载模块的列表</td>
+<td></td>
+</tr>
+<tr>
+<td>multiscan</td>
+<td align="left">批量扫描各种对象</td>
+<td></td>
+</tr>
+<tr>
+<td>mutantscan</td>
+<td align="left">对互斥对象池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>notepad</strong></td>
+<td align="left">查看记事本当前显示的文本</td>
+<td></td>
+</tr>
+<tr>
+<td>netscan</td>
+<td align="left">查看网络通讯连接</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 netscan</td>
+</tr>
+<tr>
+<td>objtypescan</td>
+<td align="left">扫描窗口对象类型对象</td>
+<td></td>
+</tr>
+<tr>
+<td>patcher</td>
+<td align="left">基于页面扫描的补丁程序内存</td>
+<td></td>
+</tr>
+<tr>
+<td>poolpeek</td>
+<td align="left">可配置的池扫描器插件</td>
+<td></td>
+</tr>
+<tr>
+<td>printkey</td>
+<td align="left">打印注册表项及其子项和值</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” ‑‑profile <profile> printkey -K “Software\Microsoft\Windows\CurrentVersion”</td>
+</tr>
+<tr>
+<td>privs</td>
+<td align="left">显示进程权限</td>
+<td></td>
+</tr>
+<tr>
+<td>procdump</td>
+<td align="left">进程转储到一个可执行文件示例</td>
+<td>vol.py -f “&#x2F;path&#x2F;to&#x2F;file” ‑‑profile <profile> procdump -p <PID> ‑‑dump-dir&#x3D;”&#x2F;path&#x2F;to&#x2F;dir”</td>
+</tr>
+<tr>
+<td><strong>pslist</strong></td>
+<td align="left">按照EPROCESS列表打印所有正在运行的进程</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 pslist</td>
+</tr>
+<tr>
+<td>psscan</td>
+<td align="left">进程对象池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>pstree</strong></td>
+<td align="left">以树型方式打印进程列表</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 pstree</td>
+</tr>
+<tr>
+<td>psxview</td>
+<td align="left">查看进程列表(psx视图)</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 psxview</td>
+</tr>
+<tr>
+<td>qemuinfo</td>
+<td align="left">转储Qemu 信息</td>
+<td></td>
+</tr>
+<tr>
+<td>raw2dmp</td>
+<td align="left">将物理内存原生数据转换为windbg崩溃转储格式</td>
+<td></td>
+</tr>
+<tr>
+<td>screenshot</td>
+<td align="left">基于GDI Windows的虚拟屏幕截图保存</td>
+<td></td>
+</tr>
+<tr>
+<td>servicediff</td>
+<td align="left">Windows服务列表(ala Plugx)</td>
+<td></td>
+</tr>
+<tr>
+<td>sessions</td>
+<td align="left">_MM_SESSION_SPACE的详细信息列表(用户登录会话)</td>
+<td></td>
+</tr>
+<tr>
+<td>shellbags</td>
+<td align="left">打印Shellbags信息</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 shellbags</td>
+</tr>
+<tr>
+<td>shimcache</td>
+<td align="left">解析应用程序兼容性Shim缓存注册表项</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 shimcache</td>
+</tr>
+<tr>
+<td>shutdowntime</td>
+<td align="left">从内存中的注册表信息获取机器关机时间</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 shutdowntime</td>
+</tr>
+<tr>
+<td>sockets</td>
+<td align="left">打印已打开套接字列表</td>
+<td></td>
+</tr>
+<tr>
+<td>sockscan</td>
+<td align="left">TCP套接字对象池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td>ssdt</td>
+<td align="left">显示SSDT条目</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 ssdt</td>
+</tr>
+<tr>
+<td>strings</td>
+<td align="left">物理到虚拟地址的偏移匹配(需要一些时间，带详细信息)</td>
+<td></td>
+</tr>
+<tr>
+<td>svcscan</td>
+<td align="left">Windows服务列表扫描</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 svcscan</td>
+</tr>
+<tr>
+<td>symlinkscan</td>
+<td align="left">符号链接对象池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td>thrdscan</td>
+<td align="left">线程对象池扫描</td>
+<td></td>
+</tr>
+<tr>
+<td>threads</td>
+<td align="left">调查_ETHREAD 和_KTHREADs</td>
+<td></td>
+</tr>
+<tr>
+<td>timeliner</td>
+<td align="left">创建内存中的各种痕迹信息的时间线</td>
+<td></td>
+</tr>
+<tr>
+<td>timers</td>
+<td align="left">打印内核计时器及关联模块的DPC</td>
+<td></td>
+</tr>
+<tr>
+<td>truecryptmaster</td>
+<td align="left">恢复TrueCrypt 7.1a主密钥</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 truecryptmaster</td>
+</tr>
+<tr>
+<td><strong>truecryptpassphrase</strong></td>
+<td align="left">查找并提取TrueCrypt密码</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 truecryptpassphrase</td>
+</tr>
+<tr>
+<td>truecryptsummary</td>
+<td align="left">TrueCrypt摘要信息</td>
+<td></td>
+</tr>
+<tr>
+<td>unloadedmodules</td>
+<td align="left">打印卸载的模块信息列表</td>
+<td></td>
+</tr>
+<tr>
+<td>userassist</td>
+<td align="left">打印注册表中UserAssist相关信息</td>
+<td>Vol.exe -f mem.raw –profile&#x3D;Win7SP1x86 userassist</td>
+</tr>
+<tr>
+<td>userhandles</td>
+<td align="left">转储用户句柄表</td>
+<td></td>
+</tr>
+<tr>
+<td>vaddump</td>
+<td align="left">转储VAD数据为文件</td>
+<td></td>
+</tr>
+<tr>
+<td>vadinfo</td>
+<td align="left">转储VAD信息</td>
+<td></td>
+</tr>
+<tr>
+<td>vadtree</td>
+<td align="left">以树形方式显示VAD树信息</td>
+<td></td>
+</tr>
+<tr>
+<td>vadwalk</td>
+<td align="left">显示遍历VAD树</td>
+<td></td>
+</tr>
+<tr>
+<td>vboxinfo</td>
+<td align="left">转储Virtualbox信息（虚拟机）</td>
+<td></td>
+</tr>
+<tr>
+<td>verinfo</td>
+<td align="left">打印PE镜像中的版本信息</td>
+<td></td>
+</tr>
+<tr>
+<td>vmwareinfo</td>
+<td align="left">转储VMware VMSS&#x2F;VMSN 信息</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>volshell</strong></td>
+<td align="left">内存镜像中的shell</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>windows</strong></td>
+<td align="left">打印桌面窗口(详细信息)</td>
+<td></td>
+</tr>
+<tr>
+<td>wintree</td>
+<td align="left">Z顺序打印桌面窗口树</td>
+<td></td>
+</tr>
+<tr>
+<td>wndscan</td>
+<td align="left">池扫描窗口站</td>
+<td></td>
+</tr>
+<tr>
+<td>yarascan</td>
+<td align="left">以Yara签名扫描进程或内核内存</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><h4 id="forensic-–-RoarCTF"><a href="#forensic-–-RoarCTF" class="headerlink" title="forensic – RoarCTF"></a>forensic – RoarCTF</h4><p>发现是内存取证，使用Volatility内存取证神器。</p>
+<p>利用 npm install <strong>-g cnpm –registry</strong>&#x3D;<strong><a target="_blank" rel="noopener" href="https://registry.npm.taobao.org/">https://registry.npm.taobao.org</a></strong>-f mem.raw imageinfo&#96;查看镜像信息</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">➜  RoarCTF volatility -f mem.raw imageinfo</span><br><span class="line">Volatility Foundation Volatility Framework <span class="number">2.6</span></span><br><span class="line">INFO    : volatility.debug    : Determining profile based <span class="keyword">on</span> KDBG search...</span><br><span class="line">          Suggested Profile(s) : Win7SP1x86_23418, Win7SP0x86, Win7SP1x86_24000, Win7SP1x86</span><br><span class="line">                     AS Layer1 : IA32PagedMemoryPae (Kernel AS)</span><br><span class="line">                     AS Layer2 : FileAddressSpace (/media/psf/Home/Documents/CTF-time/RoarCTF/mem.raw)</span><br><span class="line">                      PAE type : PAE</span><br><span class="line">                           DTB : <span class="number">0</span>x185000L</span><br><span class="line">                          KDBG : <span class="number">0</span>x81729be8L</span><br><span class="line">          Number of Processors : <span class="number">2</span></span><br><span class="line">     Image Type (Service Pack) : <span class="number">0</span></span><br><span class="line">                KPCR <span class="keyword">for</span> CPU <span class="number">0</span> : <span class="number">0</span>x8172ac00L</span><br><span class="line">                KPCR <span class="keyword">for</span> CPU <span class="number">1</span> : <span class="number">0</span>x807ec000L</span><br><span class="line">             KUSER_SHARED_DATA : <span class="number">0</span>xffdf0000L</span><br><span class="line">           Image date <span class="keyword">and</span> time : <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">55</span>:<span class="number">23</span> UTC+<span class="number">0000</span></span><br><span class="line">     Image local date <span class="keyword">and</span> time : <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">21</span>:<span class="number">55</span>:<span class="number">23</span> +<span class="number">0800</span></span><br></pre></td></tr></table></figure>
+
+<p>根据<code>Suggested Profile(s)</code>值猜测他是Win7SP1x86_23418，所以利用<code>--profile=Win7SP1x86_23418</code></p>
+<p>利用<code>volatility -f mem.raw --profile=Win7SP0x86 psscan</code>查看所有进程，通过所有进程来查看是否有可疑进程出现，进行进一步取证。</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">➜  RoarCTF volatility -f mem.raw --profile=Win7SP0x86 psscan      </span><br><span class="line">Volatility Foundation Volatility Framework <span class="number">2.6</span></span><br><span class="line">Offset(P)          <span class="keyword">Name</span>                PID   PPID PDB        Time created                   Time exited                   </span><br><span class="line">------------------ ---------------- ------ ------ ---------- ------------------------------ ------------------------------</span><br><span class="line"><span class="number">0</span>x000000001de20d40 svchost.exe        <span class="number">2088</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b440 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">09</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001de23cd8 wininit.exe         <span class="number">420</span>    <span class="number">344</span> <span class="number">0</span>x1ef9b0a0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">06</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001de99708 SearchProtocol     <span class="number">2868</span>   <span class="number">2788</span> <span class="number">0</span>x1ef9b4e0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">15</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e00fd40 svchost.exe        <span class="number">1224</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b240 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e031ae8 taskhost.exe       <span class="number">1772</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b2c0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e074d40 svchost.exe        <span class="number">1372</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b280 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e0855a0 sppsvc.exe         <span class="number">2720</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b160 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">14</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e0c8d40 taskeng.exe        <span class="number">1512</span>    <span class="number">892</span> <span class="number">0</span>x1ef9b2e0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e0da270 dwm.exe            <span class="number">1548</span>    <span class="number">856</span> <span class="number">0</span>x1ef9b320 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e0fa838 explorer.exe       <span class="number">1636</span>   <span class="number">1528</span> <span class="number">0</span>x1ef9b340 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e1065c0 imdsksvc.exe       <span class="number">1700</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b360 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e10f930 coherence.exe      <span class="number">1732</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b380 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e131d40 prl_tools_serv     <span class="number">1784</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b3a0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e14c030 coherence.exe      <span class="number">1864</span>   <span class="number">1732</span> <span class="number">0</span>x1ef9b3c0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e158b38 dllhost.exe        <span class="number">1888</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b3e0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">09</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e17cd40 msdtc.exe          <span class="number">2484</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b420 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">10</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e1e9b38 dllhost.exe        <span class="number">1392</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b480 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">09</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e1fcd40 prl_cc.exe         <span class="number">1980</span>   <span class="number">1896</span> <span class="number">0</span>x1ef9b4a0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">09</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e1ffd40 VSSVC.exe           <span class="number">296</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b460 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">09</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e228a58 lsm.exe             <span class="number">544</span>    <span class="number">420</span> <span class="number">0</span>x1ef9b100 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e268520 svchost.exe         <span class="number">644</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b120 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e33e030 svchost.exe         <span class="number">804</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b180 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e361938 svchost.exe         <span class="number">856</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b1a0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e36b030 svchost.exe         <span class="number">892</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b1c0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e383718 audiodg.exe         <span class="number">964</span>    <span class="number">804</span> <span class="number">0</span>x1ef9b1e0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e39b8b0 svchost.exe        <span class="number">1036</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b200 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e3cc728 WUDFHost.exe       <span class="number">1160</span>    <span class="number">856</span> <span class="number">0</span>x1ef9b220 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e437c38 SearchIndexer.     <span class="number">2788</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b4c0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">15</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e439a68 svchost.exe         <span class="number">716</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b140 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001e5af8b0 lsass.exe           <span class="number">536</span>    <span class="number">420</span> <span class="number">0</span>x1ef9b0e0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">07</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ec15d40 smss.exe            <span class="number">272</span>      <span class="number">4</span> <span class="number">0</span>x1ef9b020 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">04</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ec2b030 spoolsv.exe        <span class="number">1340</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b260 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">08</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ec44d40 prl_tools.exe      <span class="number">1896</span>   <span class="number">1784</span> <span class="number">0</span>x1ef9b400 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">09</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ec72bf8 winlogon.exe        <span class="number">492</span>    <span class="number">412</span> <span class="number">0</span>x1ef9b0c0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">06</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ec98030 svchost.exe        <span class="number">3648</span>    <span class="number">504</span> <span class="number">0</span>x1ef9b560 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">57</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001edda270 csrss.exe           <span class="number">428</span>    <span class="number">412</span> <span class="number">0</span>x1ef9b040 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">06</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001eddad40 services.exe        <span class="number">504</span>    <span class="number">420</span> <span class="number">0</span>x1ef9b080 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">06</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ef04600 SearchFilterHo     <span class="number">2888</span>   <span class="number">2788</span> <span class="number">0</span>x1ef9b500 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">15</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ef56030 WmiPrvSE.exe       <span class="number">3016</span>    <span class="number">644</span> <span class="number">0</span>x1ef9b2a0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">55</span>:<span class="number">10</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ef8dad8 notepad.exe        <span class="number">3524</span>   <span class="number">1636</span> <span class="number">0</span>x1ef9b300 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">51</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ef9f030 TrueCrypt.exe      <span class="number">3260</span>   <span class="number">3072</span> <span class="number">0</span>x1ef9b580 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">22</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001efbf6c8 csrss.exe           <span class="number">364</span>    <span class="number">344</span> <span class="number">0</span>x1ef9b060 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">06</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001efce468 mspaint.exe        <span class="number">3620</span>   <span class="number">1636</span> <span class="number">0</span>x1ef9b540 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">57</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001fc893f0 iexplore.exe       <span class="number">3700</span>   <span class="number">1636</span> <span class="number">0</span>x1ef9b520 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">54</span>:<span class="number">03</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001fcacd40 iexplore.exe       <span class="number">3752</span>   <span class="number">3700</span> <span class="number">0</span>x1ef9b5a0 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">54</span>:<span class="number">04</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001fcff848 conhost.exe        <span class="number">3204</span>    <span class="number">428</span> <span class="number">0</span>x1ef9b620 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">55</span>:<span class="number">15</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001fcffb38 DumpIt.exe         <span class="number">3380</span>   <span class="number">1636</span> <span class="number">0</span>x1ef9b600 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">55</span>:<span class="number">15</span> UTC+<span class="number">0000</span>                                 </span><br><span class="line"><span class="number">0</span>x000000001ffaf950 <span class="keyword">System</span>                <span class="number">4</span>      <span class="number">0</span> <span class="number">0</span>x00185000 <span class="number">2019</span>-<span class="number">09</span>-<span class="number">16</span> <span class="number">13</span>:<span class="number">53</span>:<span class="number">04</span> UTC+<span class="number">0000</span></span><br></pre></td></tr></table></figure>
+
+<p>通过观察进程可以看到 <code>DumpIt.exe</code>此项进程，这个便是dump内存时的进程。</p>
+<p>进程中有notepad.exe进程PID为 3524 我们提取一下，看看有无线索.</p>
+<p>利用 memdump 提取，文件将以进程号命名</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  RoarCTF volatility -f mem.raw --profile=Win7SP0x86 memdump -p <span class="number">3524</span> -D ./</span><br><span class="line">Volatility Foundation Volatility Framework <span class="number">2.6</span></span><br><span class="line">************************************************************************</span><br><span class="line">Writing notepad.exe [  <span class="number">3524</span>] <span class="keyword">to</span> <span class="number">3524</span>.dmp</span><br></pre></td></tr></table></figure>
+
+<p>查找 notpad 有关flag的</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">➜  RoarCTF strings <span class="number">3524</span>.dmp| grep flag</span><br><span class="line">flag.txt</span><br><span class="line">M:\flag.txt</span><br><span class="line">flag.zip</span><br><span class="line">M:\flag.zip</span><br><span class="line">flag.txt0</span><br><span class="line">; Hack flag: <span class="number">00000000.00000800</span></span><br><span class="line">; Set a hack flag <span class="keyword">to</span> ignore the boot config <span class="keyword">for</span> these chipset-integrated bridge.</span><br><span class="line">; Hack flag: <span class="number">00000000.02000000</span></span><br><span class="line">; Set a hack flag <span class="keyword">to</span> force a bridge <span class="keyword">window</span> alignment <span class="keyword">to</span> match the length of its</span><br><span class="line">; Hack flag: <span class="number">00000010.00000000</span></span><br><span class="line">; Set a hack flag <span class="keyword">to</span> fail query <span class="comment">remove on pci device.</span></span><br><span class="line">; Hack flag: <span class="number">00000400.00000000</span></span><br><span class="line">; Set a hack flag <span class="keyword">to</span> disable power management downstream of a pci bridge.</span><br><span class="line">; Hack flag: <span class="number">00000000.00400000</span></span><br><span class="line">; Set a hack flag <span class="keyword">to</span> ignore subsystem vendor/device ids.</span><br><span class="line">; Hack flag: <span class="number">00000200.00000000</span></span><br><span class="line">; Set a hack flag <span class="keyword">to</span> enable MSI mapping <span class="keyword">on</span> memory host controllers.</span><br><span class="line">C:\Users\lethal\Desktop\flag (<span class="number">2</span>).rar</span><br><span class="line">flag.txt0</span><br><span class="line">flag.txt.lnk</span><br><span class="line">flag.zip.lnk</span><br><span class="line">flag (<span class="number">2</span>).rar.lnk</span><br><span class="line">flag.rar.lnk</span><br><span class="line">flag (<span class="number">2</span>).rar.lnk</span><br><span class="line">flag.zip</span><br><span class="line">flag.rar</span><br><span class="line">The Handle property represents a handle <span class="keyword">to</span> a thread. The handle has full access rights by default. With the correct security access, the handle can be used in any function that accepts a thread handle. Depending <span class="keyword">on</span> the inheritance flag specified when it is created, this handle can be inherited by child processes.</span><br><span class="line">flag.rar</span><br><span class="line">flag.zip</span><br><span class="line">flag.txt</span><br><span class="line">L:\flag.txt</span><br></pre></td></tr></table></figure>
+
+<p>然后i利用filescan插件查找一下有关flag的文件。</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  RoarCTF volatility -f mem.raw --profile=Win7SP0x86 filescan | grep -E <span class="comment">&#x27;flag.zip|flag.rar|flag.txt&#x27;</span></span><br><span class="line">Volatility Foundation Volatility Framework <span class="number">2.6</span></span><br></pre></td></tr></table></figure>
+
+<p>然后并没有找到，可能是已经被删除了</p>
+<p><a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS文件系统</a>是微软自Windows NT系统后引入的全新的文件系统。在<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS文件系统</a>里，磁盘上的所有东西都以文件的形式保存在<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E5%88%86%E5%8C%BA&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS分区</a>内，包括文件系统自身的结构和记录也是如此。NTFS中，卷中所有存放的数据均在一个叫$MFT的文件中，叫主文件表(Master File Table)，在MFT中保存了<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=NTFS%E5%88%86%E5%8C%BA&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">NTFS分区</a>上所有文件的索引，<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao">操作系统</a>根据这个索引来检索问价。在使用mftparser插件时发现了flag.zip 和 flag.rar</p>
+<p><code>volatility -f mem.raw --profile=Win7SP1x86 mftparser &gt; mft.txt</code></p>
+<p>内容很多，随查找了一下flag关键字。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/006y8mN6ly1g7xxiekk7jj313w08w0sr.jpg"></p>
+<p>继续查找flag关键字，找到了flag.zip 和 flag.rar 的十六进制 dump 下来</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/006y8mN6ly1g7xxiz3jjuj30vp0htdh3.jpg"></p>
+<p>在压缩包里发现了flag.txt，接下来思路是找到 压缩包的密码</p>
+<p>首先简单看了下图片。</p>
+<p><code>volatility -f mem.raw --profile=Win7SP1x86 filescan | grep -E &quot;png|jpg|jpeg&quot;</code></p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">➜  RoarCTF volatility -f mem.raw --profile=Win7SP0x86 filescan | grep -E <span class="comment">&#x27;png|jpg|jpeg&#x27;              </span></span><br><span class="line">Volatility Foundation Volatility Framework <span class="number">2.6</span></span><br><span class="line"><span class="number">0</span>x000000001e1a79b8      <span class="number">8</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\Misc_24_af08942[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001e25b7d8      <span class="number">3</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Windows\System32\pngfilt.dll</span><br><span class="line"><span class="number">0</span>x000000001ec601b8      <span class="number">2</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\timer_8dee5c8[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001efb29f8      <span class="number">8</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Users\lethal\Pictures\无标题.png</span><br><span class="line"><span class="number">0</span>x000000001fc87838      <span class="number">8</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\<span class="number">8</span>C65LHWR\youqianhua71090-<span class="number">20190901</span>[<span class="number">1</span>].jpg</span><br><span class="line"><span class="number">0</span>x000000001fc87f80      <span class="number">8</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\vip-icon-all_7d887d5[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fc90ad0      <span class="number">2</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\<span class="number">4</span>U3T3ZUT\netdisk.<span class="number">1</span>.b66dd99a.fWIQlbKsyaUNxqaq1TY6xg[<span class="number">1</span>].jpg</span><br><span class="line"><span class="number">0</span>x000000001fc96b00      <span class="number">8</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Content.IE5\<span class="number">1</span>C24IFJ8\favicon[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fc9ce48      <span class="number">8</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\share_tit_bg_5855301[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcbf038      <span class="number">2</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\tip-close_f52b979[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcbfcb0      <span class="number">2</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\<span class="number">8</span>C65LHWR\tips_ffb87d4[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcd8630      <span class="number">8</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\ini_logo_ad77277[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcd8d90      <span class="number">2</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\<span class="number">4</span>U3T3ZUT\p-vip-icon-all_be8d2cb[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcdb2b0      <span class="number">8</span>      <span class="number">0</span> R--r-d \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\footer-cloud_0e0a657[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcdbd88      <span class="number">8</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\<span class="number">4</span>U3T3ZUT\Misc_54_f86ddc2[<span class="number">1</span>].png</span><br><span class="line"><span class="number">0</span>x000000001fcfd218      <span class="number">8</span>      <span class="number">0</span> -W-rwd \Device\HarddiskVolume2\Users\lethal\AppData\Local\Microsoft\Windows\Temporary Internet <span class="keyword">Files</span>\Low\Content.IE5\W9N0PGR5\updata-bg_2be0559[<span class="number">1</span>].png</span><br></pre></td></tr></table></figure>
+
+<p>filesacn发现在我的文档，图片，文件夹里，有张图片 ，dumpfiles 下来就是flag.zip 的密码，成功拿到flag</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">-Q参数使用物理偏移量进行转储</span><br><span class="line">-n以文件名保存</span><br><span class="line">--dump-dir=目标存储位置</span><br><span class="line">➜  RoarCTF volatility -f mem.raw --profile=Win7SP0x86 dumpfiles -Q <span class="number">0</span>x000000001efb29f8 -n --dump-dir=./</span><br><span class="line">Volatility Foundation Volatility Framework <span class="number">2.6</span></span><br><span class="line">DataSectionObject <span class="number">0</span>x1efb29f8   None   \Device\HarddiskVolume2\Users\lethal\Pictures\无标题.png</span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/006y8mN6ly1g7xx6k8uvej30n106m3yb.jpg"></p>
+<h4 id="VN2020-公开赛-内存取证"><a href="#VN2020-公开赛-内存取证" class="headerlink" title="[VN2020 公开赛]内存取证"></a>[VN2020 公开赛]内存取证</h4><p>先使用volatility2</p>
+<p>查看内存平台版本</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">λ python2 D:\RayiTools\取证工具\volatility2\vol.py -f .\mem.raw imageinfo</span><br><span class="line">Volatility Foundation Volatility Framework 2.6</span><br><span class="line">INFO    : volatility.debug    : Determining profile based on KDBG search...</span><br><span class="line">          Suggested Profile(s) : Win7SP1x86_23418, Win7SP0x86, Win7SP1x86</span><br><span class="line">                     AS Layer1 : IA32PagedMemoryPae (Kernel AS)</span><br><span class="line">                     AS Layer2 : FileAddressSpace (C:\Users\Rayi\Desktop\2020VNCTF\mem.raw)</span><br><span class="line">                      PAE <span class="built_in">type</span> : PAE</span><br><span class="line">                           DTB : 0x185000L</span><br><span class="line">                          KDBG : 0x8176bbe8L</span><br><span class="line">          Number of Processors : 2</span><br><span class="line">     Image Type (Service Pack) : 0</span><br><span class="line">                KPCR <span class="keyword">for</span> CPU 0 : 0x8176cc00L</span><br><span class="line">                KPCR <span class="keyword">for</span> CPU 1 : 0x807ec000L</span><br><span class="line">             KUSER_SHARED_DATA : 0xffdf0000L</span><br><span class="line">           Image <span class="built_in">date</span> and time : 2020-02-18 19:56:24 UTC+0000</span><br><span class="line">     Image <span class="built_in">local</span> <span class="built_in">date</span> and time : 2020-02-19 03:56:24 +0800</span><br></pre></td></tr></table></figure>
+
+<p>查看当前进程</p>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python2 D:\RayiTools\取证工具\volatility2\<span class="built_in">vol</span>.py -f .\mem.raw --profile=Win7SP1x86 pstree</span><br></pre></td></tr></table></figure>
+
+<p><strong>pslist</strong>命令不仅显示了所有正在运行的进程，而且给出了有价值的信息，比如PID、PPID、启动的时间。</p>
+<p><strong>pstree</strong>与pslist命令不同的地方在于还可以识别子进程以及父进程</p>
+<p><strong>psscan</strong>命令可以显示出被恶意软件比如rootkit为了躲避用户或杀毒软件而隐藏的进程</p>
+<p><code>pslist</code></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508215807909.png" alt="image-20210508215807909"></p>
+<p><code>pstree</code></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508215825071.png" alt="image-20210508215825071"></p>
+<p><code>psscan</code></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508215935157.png" alt="image-20210508215935157"></p>
+<p>其中有几个值得注意的进程</p>
+<ul>
+<li><code>mspaint.exe</code> 微软画图工具</li>
+<li><code>notepad.exe</code> 记事本</li>
+<li><code>TrueCrypt.exe</code> 加密容器</li>
+</ul>
+<p>要导出记事本的内容，可以现将记事本dump出来</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">python2 D:\RayiTools\取证工具\volatility2\vol.py -f .\mem.raw --profile=Win7SP1x86 memdump -o 0x000000001f1f5d40 --dump-dir ./</span><br><span class="line"> </span><br><span class="line"> <span class="comment"># OR</span></span><br><span class="line"> </span><br><span class="line"> python2 D:\RayiTools\取证工具\volatility2\vol.py -f .\mem.raw --profile=Win7SP1x86 memdump -p 3552 --dump-dir ./</span><br></pre></td></tr></table></figure>
+
+<p>然后用strings命令导出notepad中的字符串</p>
+<p>在一大串字符串中可以找到这些东西</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508220816509.png" alt="image-20210508220816509"></p>
+<p>这里有个更简单的办法，直接用<code>editbox</code>插件，即可看到系统中所有编辑控件中的编辑内容</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">$ volatility2 -f ./mem.raw --profile=Win7SP1x86 editbox</span><br><span class="line">Volatility Foundation Volatility Framework 2.6</span><br><span class="line">******************************</span><br><span class="line">Wnd Context       : 1\WinSta0\Default</span><br><span class="line">Process ID        : 3640</span><br><span class="line">ImageFileName     : iexplore.exe</span><br><span class="line">IsWow64           : No</span><br><span class="line">atom_class        : 6.0.7600.16385!Edit</span><br><span class="line">value-of WndExtra : 0x4a13b8</span><br><span class="line">nChars            : 0</span><br><span class="line">selStart          : 0</span><br><span class="line">selEnd            : 0</span><br><span class="line">isPwdControl      : False</span><br><span class="line">undoPos           : 0</span><br><span class="line">undoLen           : 0</span><br><span class="line">address-of undoBuf: 0x0</span><br><span class="line">undoBuf           :</span><br><span class="line">-------------------------</span><br><span class="line"></span><br><span class="line">******************************</span><br><span class="line">Wnd Context       : 1\WinSta0\Default</span><br><span class="line">Process ID        : 3640</span><br><span class="line">ImageFileName     : iexplore.exe</span><br><span class="line">IsWow64           : No</span><br><span class="line">atom_class        : 6.0.7600.16385!Edit</span><br><span class="line">value-of WndExtra : 0x49f3d0</span><br><span class="line">nChars            : 60</span><br><span class="line">selStart          : 0</span><br><span class="line">selEnd            : 0</span><br><span class="line">isPwdControl      : False</span><br><span class="line">undoPos           : 0</span><br><span class="line">undoLen           : 0</span><br><span class="line">address-of undoBuf: 0x0</span><br><span class="line">undoBuf           :</span><br><span class="line">-------------------------</span><br><span class="line">https://pan.baidu.com/share/init?surl=jAVwrRzIgW1QsLHidtzY_w</span><br><span class="line">******************************</span><br><span class="line">Wnd Context       : 1\WinSta0\Default</span><br><span class="line">Process ID        : 3552</span><br><span class="line">ImageFileName     : notepad.exe</span><br><span class="line">IsWow64           : No</span><br><span class="line">atom_class        : 6.0.7600.16385!Edit</span><br><span class="line">value-of WndExtra : 0x177ad0</span><br><span class="line">nChars            : 78</span><br><span class="line">selStart          : 0</span><br><span class="line">selEnd            : 0</span><br><span class="line">isPwdControl      : False</span><br><span class="line">undoPos           : 0</span><br><span class="line">undoLen           : 0</span><br><span class="line">address-of undoBuf: 0x0</span><br><span class="line">undoBuf           :</span><br><span class="line">-------------------------</span><br><span class="line"><span class="built_in">where</span> is <span class="built_in">link</span>?链接: https://pan.baidu.com/s/ 提取码: heem 复制这段内容后打开百度网盘手机App，操作更方便哦</span><br></pre></td></tr></table></figure>
+
+<p>两个提取码和提取链接都找到了</p>
+<p>网盘里存的是VOL加密容器，下一步就是找<code>truecrypt</code>加密容器的解密办法</p>
+<p>利用工具<code>Elcomsoft Forensic Disk Decryptor</code></p>
+<p>先dump出内存中的<code>TrueCrypt.exe</code></p>
+<p>然后打开工具</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508223229230.png" alt="image-20210508223229230"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508223259008.png" alt="image-20210508223259008"></p>
+<p>这样就有密钥了</p>
+<p>一直下一步，挂载容器</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508223332781.png" alt="image-20210508223332781"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508223406645.png" alt="image-20210508223406645"></p>
+<p>打开里面有个key文件，内容如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">uOjFdKu1jsbWI8N51jsbWI8N5</span><br></pre></td></tr></table></figure>
+
+<p>再用这个key去挂载容器</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508223619449.png" alt="image-20210508223619449"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/image-20210508223714514.png" alt="image-20210508223714514"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">Rayi</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://rayi.sdpcsec.cn/2023/07/01/volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/">http://rayi.sdpcsec.cn/2023/07/01/volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://rayi.sdpcsec.cn" target="_blank">Site-01</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="http://pic.rayi.sdpcsec.cn/9adff99d4350f6355fa71854864ec381.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://fastly.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/"><img class="next-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">在非目标机器上制作相同内核版本Profile文件</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/6f23fe17bbff904f5199f48a63e2907f.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Rayi</div><div class="author-info__description">CTF菜狗，渗透垃圾。</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Bronya-Rayi" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:bronya.rayi@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0"><span class="toc-number">1.</span> <span class="toc-text">volatility2与3使用笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9C%80%E5%88%86%E6%9E%90%E5%86%85%E5%AE%B9"><span class="toc-number">1.1.</span> <span class="toc-text">需分析内容</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#volatility3"><span class="toc-number">1.2.</span> <span class="toc-text">volatility3</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.2.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Linux"><span class="toc-number">1.2.2.</span> <span class="toc-text">Linux</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E5%88%97%E8%A1%A8"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">模块列表</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MacOS"><span class="toc-number">1.2.3.</span> <span class="toc-text">MacOS</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E5%88%97%E8%A1%A8-1"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">模块列表</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows"><span class="toc-number">1.2.4.</span> <span class="toc-text">Windows</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E5%88%97%E8%A1%A8-2"><span class="toc-number">1.2.4.1.</span> <span class="toc-text">模块列表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B3%A8%E5%86%8C%E8%A1%A8"><span class="toc-number">1.2.4.2.</span> <span class="toc-text">注册表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BD%AC%E5%82%A8%E6%96%87%E4%BB%B6"><span class="toc-number">1.2.4.3.</span> <span class="toc-text">转储文件</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#volatility2"><span class="toc-number">1.3.</span> <span class="toc-text">volatility2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Windows-1"><span class="toc-number">1.3.1.</span> <span class="toc-text">Windows</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E7%A1%80%E4%BF%A1%E6%81%AF"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">基础信息</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E5%88%86%E6%9E%90"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">进程分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93"><span class="toc-number">1.3.1.3.</span> <span class="toc-text">动态链接库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5"><span class="toc-number">1.3.1.4.</span> <span class="toc-text">网络连接</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E6%A0%B8%E9%A9%B1%E5%8A%A8"><span class="toc-number">1.3.1.5.</span> <span class="toc-text">内核驱动</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8F%90%E5%8F%96%E8%BF%9B%E7%A8%8B%E7%A8%8B%E5%BA%8F"><span class="toc-number">1.3.1.6.</span> <span class="toc-text">提取进程程序</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%96%87%E4%BB%B6"><span class="toc-number">1.3.1.7.</span> <span class="toc-text">内存文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AF%BC%E5%87%BA%E5%86%85%E5%AD%98%E4%B8%AD%E7%BC%93%E5%AD%98%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-number">1.3.1.8.</span> <span class="toc-text">导出内存中缓存的文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B3%A8%E5%86%8C%E8%A1%A8-1"><span class="toc-number">1.3.1.9.</span> <span class="toc-text">注册表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#cmd%E5%91%BD%E4%BB%A4%E6%83%85%E5%86%B5"><span class="toc-number">1.3.1.10.</span> <span class="toc-text">cmd命令情况</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%8E%B7%E5%8F%96SAM%E8%A1%A8%E4%B8%AD%E7%9A%84%E7%94%A8%E6%88%B7"><span class="toc-number">1.3.1.11.</span> <span class="toc-text">获取SAM表中的用户</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9C%80%E5%90%8E%E7%99%BB%E5%BD%95%E7%9A%84%E7%94%A8%E6%88%B7"><span class="toc-number">1.3.1.12.</span> <span class="toc-text">最后登录的用户</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AF%86%E7%A0%81hash"><span class="toc-number">1.3.1.13.</span> <span class="toc-text">密码hash</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Windows%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.3.1.14.</span> <span class="toc-text">Windows服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#MFT%E6%96%87%E4%BB%B6%E7%B4%A2%E5%BC%95"><span class="toc-number">1.3.1.15.</span> <span class="toc-text">MFT文件索引</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%80%E6%9C%89%E7%BC%96%E8%BE%91%E6%A1%86%E4%B8%AD%E7%9A%84%E5%86%85%E5%AE%B9"><span class="toc-number">1.3.1.16.</span> <span class="toc-text">所有编辑框中的内容</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E4%BB%B6%E5%88%97%E8%A1%A8"><span class="toc-number">1.3.2.</span> <span class="toc-text">插件列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B"><span class="toc-number">1.3.3.</span> <span class="toc-text">示例</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#forensic-%E2%80%93-RoarCTF"><span class="toc-number">1.3.3.1.</span> <span class="toc-text">forensic – RoarCTF</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#VN2020-%E5%85%AC%E5%BC%80%E8%B5%9B-%E5%86%85%E5%AD%98%E5%8F%96%E8%AF%81"><span class="toc-number">1.3.3.2.</span> <span class="toc-text">[VN2020 公开赛]内存取证</span></a></li></ol></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/07/01/volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/" title="volatility2与3使用笔记"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/9adff99d4350f6355fa71854864ec381.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="volatility2与3使用笔记"/></a><div class="content"><a class="title" href="/2023/07/01/volatility2%E4%B8%8E3%E4%BD%BF%E7%94%A8%E7%AC%94%E8%AE%B0/" title="volatility2与3使用笔记">volatility2与3使用笔记</a><time datetime="2023-07-01T13:48:51.791Z" title="发表于 2023-07-01 21:48:51">2023-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/" title="在非目标机器上制作相同内核版本Profile文件"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/d70502b02a67e8871713e3247d3828f7.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="在非目标机器上制作相同内核版本Profile文件"/></a><div class="content"><a class="title" href="/2023/06/26/%E5%9C%A8%E9%9D%9E%E7%9B%AE%E6%A0%87%E6%9C%BA%E5%99%A8%E4%B8%8A%E5%88%B6%E4%BD%9C%E7%9B%B8%E5%90%8C%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%ACProfile%E6%96%87%E4%BB%B6/" title="在非目标机器上制作相同内核版本Profile文件">在非目标机器上制作相同内核版本Profile文件</a><time datetime="2023-06-26T13:42:35.814Z" title="发表于 2023-06-26 21:42:35">2023-06-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/06/18/%E5%88%A9%E7%94%A8SSH%E9%9A%A7%E9%81%93%E5%BB%BA%E7%AB%8B%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E6%88%96Socks%E4%BB%A3%E7%90%86/" title="利用SSH隧道建立端口转发或Socks代理"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/c23e60bac678b974ffab7774c3ae2878.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="利用SSH隧道建立端口转发或Socks代理"/></a><div class="content"><a class="title" href="/2023/06/18/%E5%88%A9%E7%94%A8SSH%E9%9A%A7%E9%81%93%E5%BB%BA%E7%AB%8B%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%E6%88%96Socks%E4%BB%A3%E7%90%86/" title="利用SSH隧道建立端口转发或Socks代理">利用SSH隧道建立端口转发或Socks代理</a><time datetime="2023-06-18T03:24:04.941Z" title="发表于 2023-06-18 11:24:04">2023-06-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/28/VMware-12%E4%BB%A3CPU%E5%8D%A1%E9%A1%BF%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" title="VMware-12代CPU卡顿解决办法"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/d75df8e79b05bab46c36d971a3cd3bf1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="VMware-12代CPU卡顿解决办法"/></a><div class="content"><a class="title" href="/2023/05/28/VMware-12%E4%BB%A3CPU%E5%8D%A1%E9%A1%BF%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" title="VMware-12代CPU卡顿解决办法">VMware-12代CPU卡顿解决办法</a><time datetime="2023-05-28T08:51:56.410Z" title="发表于 2023-05-28 16:51:56">2023-05-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/27/Flask+Celery/" title="Flask+Celery"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="http://pic.rayi.sdpcsec.cn/3ab9d954b25bf50ca79f41b970edb79c.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Flask+Celery"/></a><div class="content"><a class="title" href="/2023/05/27/Flask+Celery/" title="Flask+Celery">Flask+Celery</a><time datetime="2023-05-27T08:22:54.221Z" title="发表于 2023-05-27 16:22:54">2023-05-27</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2023 By Rayi</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">本地搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://fastly.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://fastly.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
