@@ -1562,6 +1562,111 @@
       </categories>
   </entry>
   <entry>
+    <title>使用typora插件补足其功能缺陷</title>
+    <url>/2023/07/12/typora%E6%8F%92%E4%BB%B6/</url>
+    <content><![CDATA[<h2 id="使用typora插件补足其功能缺陷"><a href="#使用typora插件补足其功能缺陷" class="headerlink" title="使用typora插件补足其功能缺陷"></a>使用typora插件补足其功能缺陷</h2><p>直接上github地址：</p>
+<p><a href="https://github.com/obgnail/typora_plugin">obgnail&#x2F;typora_plugin: 通过注入js代码的方式为typora添加多关键字搜索和标签管理等多个功能 (github.com)</a></p>
+<p><a href="https://github.com/gatziourasd/typora-tabbar-plugin">gatziourasd&#x2F;typora-tabbar-plugin: Unofficial plugin that adds a tabbar to Typora (github.com)</a></p>
+<p>两个插件搭配食用，达到最好的typora使用体验</p>
+<p>typora作为陪伴了我三四年的笔记软件，我深刻的感受到了她的美观、优雅、简洁、稳定，以及一丢丢丢的不足</p>
+<p>作为单纯的Markdown编辑器来讲，其流畅的所见即所得体验绝对在众多编辑器中名列前茅，但作为知识管理软件来讲，无法多个关键词搜索、多标签页等等缺点却都是致命的</p>
+<p>幸运的是，typora作为使用electron的笔记软件，本身就有很大的扩展性，以上两个js写的插件就完美完善的typora的不足之处，让其变得更加好用顺手</p>
+<p>目前支持的功能：</p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>文件名</th>
+<th>功能</th>
+<th>默认开启</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>search_multi</td>
+<td>全局多关键字搜索</td>
+<td>是</td>
+</tr>
+<tr>
+<td>2</td>
+<td>md_padding</td>
+<td>中文与英文、数字之间添加空格</td>
+<td>是</td>
+</tr>
+<tr>
+<td>3</td>
+<td>commander</td>
+<td>命令行环境</td>
+<td>是</td>
+</tr>
+<tr>
+<td>4</td>
+<td>read_only</td>
+<td>只读模式</td>
+<td>是</td>
+</tr>
+<tr>
+<td>5</td>
+<td>collapse_paragraph</td>
+<td>章节折叠</td>
+<td>是</td>
+</tr>
+<tr>
+<td>6</td>
+<td>copy_code</td>
+<td>一键复制代码</td>
+<td>是</td>
+</tr>
+<tr>
+<td>7</td>
+<td>resize_table</td>
+<td>调整表格行高列宽</td>
+<td>是</td>
+</tr>
+<tr>
+<td>8</td>
+<td>resize_image</td>
+<td>调整图片显示大小</td>
+<td>是</td>
+</tr>
+<tr>
+<td>9</td>
+<td>go_top</td>
+<td>一键到文章顶部</td>
+<td>是</td>
+</tr>
+<tr>
+<td>10</td>
+<td>file_counter</td>
+<td>显示目录下的文件数</td>
+<td>是</td>
+</tr>
+<tr>
+<td>11</td>
+<td>truncate_text</td>
+<td>暂时隐藏内容，提高大文件渲染性能</td>
+<td>是</td>
+</tr>
+<tr>
+<td>12</td>
+<td>window_tab &#x2F; window_tab_drag</td>
+<td>标签页管理</td>
+<td>高版本关闭</td>
+</tr>
+<tr>
+<td>13</td>
+<td>mermaid_replace</td>
+<td>替换 mermaid 组件</td>
+<td>否</td>
+</tr>
+</tbody></table>
+<p>高版本的标签页管理功能在<a href="https://github.com/gatziourasd/typora-tabbar-plugin">gatziourasd&#x2F;typora-tabbar-plugin: Unofficial plugin that adds a tabbar to Typora (github.com)</a>实现，当然也可以与typora_plugin整合在一起使用</p>
+]]></content>
+      <categories>
+        <category>折腾环境</category>
+      </categories>
+  </entry>
+  <entry>
     <title>关于</title>
     <url>/about/index.html</url>
     <content><![CDATA[<h3 id="这个站点"><a href="#这个站点" class="headerlink" title="这个站点"></a>这个站点</h3><p>白嫖怪专属，Github+加速乐</p>
